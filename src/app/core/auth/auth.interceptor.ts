@@ -10,7 +10,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
 
   const accessToken = tokenStorage.getAccessToken();
-  const authReq = accessToken
+  const isAuthenticated = tokenStorage.isAuthenticated();
+
+  if (!isAuthenticated && accessToken) {
+    tokenStorage.clear();
+    void router.navigateByUrl('/login');
+    return next(req);
+  }
+
+  const authReq = isAuthenticated && accessToken
     ? req.clone({
         setHeaders: {
           Authorization: `Bearer ${accessToken}`

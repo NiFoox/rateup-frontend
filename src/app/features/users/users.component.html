@@ -1,0 +1,136 @@
+<section class="users-page">
+  <header class="users-header">
+    <div>
+      <h1>Usuarios</h1>
+      <p>Gestiona los accesos y estados del equipo.</p>
+    </div>
+    <button mat-flat-button color="primary" (click)="openCreateDialog()">
+      <mat-icon>person_add</mat-icon>
+      Nuevo usuario
+    </button>
+  </header>
+
+  <form class="users-filters" [formGroup]="filterForm">
+    <mat-form-field appearance="fill">
+      <mat-label>Buscar</mat-label>
+      <input matInput formControlName="search" placeholder="Nombre o email" />
+      <button
+        mat-icon-button
+        matSuffix
+        *ngIf="filterForm.controls.search.value"
+        (click)="filterForm.controls.search.setValue('')"
+        type="button"
+        aria-label="Limpiar búsqueda"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Rol</mat-label>
+      <mat-select formControlName="role">
+        <mat-option value="all">Todos</mat-option>
+        <mat-option *ngFor="let role of rolesOptions" [value]="role">{{ role | titlecase }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Estado</mat-label>
+      <mat-select formControlName="active">
+        <mat-option value="all">Todos</mat-option>
+        <mat-option value="true">Activos</mat-option>
+        <mat-option value="false">Inactivos</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </form>
+
+  <div class="table-wrapper" [class.loading]="isLoading() || isMutating()">
+    <table
+      mat-table
+      [dataSource]="dataSource"
+      matSort
+      matSortDisableClear
+      matSortActive="createdAt"
+      matSortDirection="desc"
+      (matSortChange)="onSortChange($event)"
+    >
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="name">Nombre</th>
+        <td mat-cell *matCellDef="let user">
+          <div class="user-name">
+            <mat-icon aria-hidden="true">person</mat-icon>
+            <div>
+              <p class="name">{{ user.name }}</p>
+              <p class="email">{{ user.email }}</p>
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="email">Email</th>
+        <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="roles">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="roles">Roles</th>
+        <td mat-cell *matCellDef="let user">
+          <mat-chip-set class="roles-chipset">
+            <mat-chip *ngFor="let role of user.roles" color="primary" selected>{{ role | titlecase }}</mat-chip>
+          </mat-chip-set>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="active">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="active">Activo</th>
+        <td mat-cell *matCellDef="let user">
+          <mat-slide-toggle
+            [checked]="user.active"
+            (change)="toggleStatus(user, $event.checked)"
+            [disabled]="isMutating()"
+            color="primary"
+            aria-label="Cambiar estado"
+          ></mat-slide-toggle>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="createdAt">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="createdAt">Creado</th>
+        <td mat-cell *matCellDef="let user">{{ user.createdAt | date: 'mediumDate' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let user" class="actions">
+          <button mat-icon-button color="primary" (click)="openEditDialog(user)" [disabled]="isMutating()" matTooltip="Editar">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="confirmDelete(user)" [disabled]="isMutating()" matTooltip="Eliminar">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+
+    <div class="empty-state" *ngIf="!isLoading() && dataSource.data.length === 0">
+      <mat-icon>group_off</mat-icon>
+      <p>No se encontraron usuarios con los filtros seleccionados.</p>
+    </div>
+
+    <div class="overlay" *ngIf="isLoading() || isMutating()">
+      <mat-progress-spinner mode="indeterminate" diameter="48"></mat-progress-spinner>
+    </div>
+  </div>
+
+  <mat-paginator
+    [length]="total()"
+    [pageIndex]="pageIndex()"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="[5, 10, 25]"
+    (page)="onPageChange($event)"
+    aria-label="Paginación de usuarios"
+  ></mat-paginator>
+</section>

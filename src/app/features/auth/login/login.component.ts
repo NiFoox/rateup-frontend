@@ -24,6 +24,10 @@ import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { LoginRequest } from '../../../core/auth/auth.models';
 
+interface MockHttpError extends Error {
+  status: number;
+}
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -69,11 +73,11 @@ export class LoginComponent {
     }
 
     const { email, password, rememberMe } = this.form.getRawValue();
-    const payload: LoginRequest = { email, password };
+    const payload: LoginRequest = { email, password, remember: rememberMe };
 
     this.isLoading.set(true);
     this.authService
-      .login(payload, rememberMe)
+      .login(payload)
       .pipe(
         finalize(() => this.isLoading.set(false)),
         takeUntilDestroyed(this.destroyRef)
@@ -84,10 +88,11 @@ export class LoginComponent {
             duration: 3000,
             verticalPosition: 'top'
           });
-          void this.router.navigateByUrl('/dashboard');
+          void this.router.navigateByUrl('/users');
         },
-        error: () => {
-          this.snackBar.open('No pudimos iniciar sesión. Verifica tus credenciales.', 'Cerrar', {
+        error: (error: unknown) => {
+          const message = this.resolveErrorMessage(error as MockHttpError);
+          this.snackBar.open(message, 'Cerrar', {
             duration: 5000,
             verticalPosition: 'top'
           });
@@ -97,6 +102,20 @@ export class LoginComponent {
 
   togglePasswordVisibility(): void {
     this.isPasswordHidden.update((hidden) => !hidden);
+  }
+
+  private resolveErrorMessage(error: MockHttpError): string {
+    if (typeof error?.status === 'number') {
+      if (error.status === 401) {
+        return 'Credenciales inválidas. Verifica tu email y contraseña.';
+      }
+
+      if (error.status === 403) {
+        return 'Tu usuario está deshabilitado. Contacta al administrador.';
+      }
+    }
+
+    return 'No pudimos iniciar sesión. Intenta nuevamente en unos instantes.';
   }
 
   private focusFirstInvalidControl(): void {
