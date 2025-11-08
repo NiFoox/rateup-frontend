@@ -1,0 +1,98 @@
+<div class="login-container">
+  <form
+    class="login-form"
+    [formGroup]="form"
+    (ngSubmit)="submit()"
+    novalidate
+    aria-label="Formulario de inicio de sesión"
+  >
+    <h1 class="login-title">Ingresá a tu cuenta</h1>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Email</mat-label>
+        <input
+          id="email"
+          matInput
+          type="email"
+          formControlName="email"
+          required
+          autocomplete="email"
+          aria-required="true"
+          aria-label="Email"
+          [attr.aria-invalid]="(form.get('email')?.invalid && form.get('email')?.touched) ? 'true' : 'false'"
+          [attr.aria-describedby]="(form.get('email')?.invalid && form.get('email')?.touched) ? 'email-errors' : null"
+          placeholder="Email"
+        />
+        <mat-icon matSuffix aria-hidden="true">mail</mat-icon>
+        @if (form.get('email')?.touched && form.get('email')?.invalid) {
+          <mat-error id="email-errors">Correo inválido.</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Contraseña</mat-label>
+        <input
+          id="password"
+          matInput
+          [type]="isPasswordHidden() ? 'password' : 'text'"
+          formControlName="password"
+          required
+          autocomplete="current-password"
+          aria-required="true"
+          aria-label="Contraseña"
+          [attr.aria-invalid]="form.controls.password.invalid && form.controls.password.touched"
+          [attr.aria-describedby]="
+            form.controls.password.invalid && form.controls.password.touched ? 'password-errors' : null
+          "
+        />
+
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          (click)="togglePasswordVisibility()"
+          aria-label="{{ isPasswordHidden() ? 'Mostrar contraseña' : 'Ocultar contraseña' }}"
+          [attr.aria-pressed]="!isPasswordHidden()"
+        >
+          <mat-icon aria-hidden="true">
+            {{ isPasswordHidden() ? 'visibility' : 'visibility_off' }}
+          </mat-icon>
+        </button>
+      @if (form.controls.password.touched && form.controls.password.invalid) {
+        <mat-error id="password-errors" aria-live="assertive">
+          @if (form.controls.password.hasError('required')) {
+            <span>La contraseña es obligatoria.</span>
+          } @else if (form.controls.password.hasError('minlength')) {
+            <span>La contraseña debe tener al menos 8 caracteres.</span>
+          }
+        </mat-error>
+      }
+    </mat-form-field>
+
+    <mat-checkbox
+      formControlName="rememberMe"
+      aria-label="Recordar mi sesión en este dispositivo"
+      class="remember-checkbox"
+    >
+      Recordarme
+    </mat-checkbox>
+
+    <button
+      mat-flat-button
+      color="primary"
+      class="submit-button"
+      type="submit"
+      [disabled]="isSubmitDisabled()"
+      aria-label="Ingresar"
+    >
+      @if (isLoading()) {
+        <mat-progress-spinner
+          diameter="20"
+          mode="indeterminate"
+          color="accent"
+          aria-hidden="true"
+        ></mat-progress-spinner>
+      }
+      <span class="submit-label">Ingresar</span>
+    </button>
+  </form>
+</div>

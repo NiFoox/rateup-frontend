@@ -22,8 +22,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, startWith } from 'rxjs/operators';
-import { AuthService } from '../../../core/auth/auth.service';
-import { LoginRequest } from '../../../core/auth/auth.models';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { LoginRequest } from '../../../../core/auth/auth.models';
 
 interface MockHttpError extends Error {
   status: number;

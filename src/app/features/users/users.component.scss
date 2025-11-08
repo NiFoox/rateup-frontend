@@ -71,8 +71,9 @@
 
   .actions {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    align-self: center;
+    flex-wrap: wrap;
+    gap: 4px;
   }
 
   .empty-state {
