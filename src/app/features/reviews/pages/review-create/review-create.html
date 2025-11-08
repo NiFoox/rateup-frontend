@@ -1,0 +1,28 @@
+<app-toolbar></app-toolbar>
+
+<form [formGroup]="form" (ngSubmit)="submit()" style="display:grid; gap:1rem; padding:1rem; max-width:520px;">
+
+  <mat-form-field>
+    <mat-label>Juego</mat-label>
+      @for (g of games; track g.id ?? g.name) {
+        <mat-option [value]="g.name">{{ g.name }}</mat-option>
+      }
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Comentario</mat-label>
+    <textarea matInput formControlName="content" rows="4"></textarea>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Puntaje (0–10)</mat-label>
+    <input matInput type="number" formControlName="score" />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Autor</mat-label>
+    <input matInput formControlName="author" />
+  </mat-form-field>
+
+  <button mat-raised-button color="primary" type="submit">Guardar</button>
+</form>

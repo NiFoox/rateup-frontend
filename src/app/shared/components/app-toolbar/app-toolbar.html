@@ -1,1 +1,18 @@
-<p>app-toolbar works!</p>
+<mat-toolbar color="primary">
+  <span class="app-title">
+    <mat-icon class="mr-2">sports_esports</mat-icon>
+    RateUp
+  </span>
+
+  <span class="spacer"></span>
+
+  <button mat-button routerLink="/games">
+    <mat-icon>videogame_asset</mat-icon>
+    Juegos
+  </button>
+
+  <button mat-button routerLink="/reviews/new">
+    <mat-icon>rate_review</mat-icon>
+    Nueva reseña
+  </button>
+</mat-toolbar>
