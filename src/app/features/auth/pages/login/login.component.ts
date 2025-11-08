@@ -97,7 +97,7 @@ export class LoginComponent {
             duration: 3000,
             verticalPosition: 'top',
           });
-          void this.router.navigateByUrl('/users');
+          void this.router.navigateByUrl('/home');
         },
         error: (error: unknown) => {
           const message = this.resolveErrorMessage(error as MockHttpError);
