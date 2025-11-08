@@ -1,0 +1,9 @@
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+mat-dialog-content {
+  min-width: 320px;
+}
