@@ -6,6 +6,7 @@ import { roleGuard } from './core/auth/role.guard';
 export const routes: Routes = [
   {
     path: 'login',
+    data: { hideToolbar: true },
     loadComponent: () =>
       import('./features/auth/pages/login/login.component').then((m) => m.LoginComponent)
   },
