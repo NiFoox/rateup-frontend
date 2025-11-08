@@ -4,9 +4,9 @@
 
   <mat-form-field>
     <mat-label>Juego</mat-label>
-    <mat-select formControlName="gameTitle">
-      <mat-option *ngFor="let g of games" [value]="g.name">{{ g.name }}</mat-option>
-    </mat-select>
+      @for (g of games; track g.id ?? g.name) {
+        <mat-option [value]="g.name">{{ g.name }}</mat-option>
+      }
   </mat-form-field>
 
   <mat-form-field>
