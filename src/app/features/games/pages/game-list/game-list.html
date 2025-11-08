@@ -1,7 +1,7 @@
 <app-toolbar></app-toolbar>
 <div style="display:grid; gap:1rem; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); padding:1rem;">
   @for (g of games(); track g.id ?? g.name) {
-    <mat-card>
+    <mat-card *ngFor="let g of games()">
       <mat-card-title>{{ g.name }}</mat-card-title>
       <mat-card-subtitle>{{ g.genre }}</mat-card-subtitle>
       <mat-card-content>
