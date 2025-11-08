@@ -20,7 +20,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
-
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map, startWith } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth/auth.service';
 import { LoginRequest } from '../../../core/auth/auth.models';
 
@@ -40,11 +41,11 @@ interface MockHttpError extends Error {
     MatIconModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
-    MatCheckboxModule
+    MatCheckboxModule,
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginComponent {
   private readonly fb = inject(FormBuilder);
@@ -58,12 +59,20 @@ export class LoginComponent {
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
-    rememberMe: [false]
+    rememberMe: [false],
   });
+  readonly formValid = toSignal(
+    this.form.statusChanges.pipe(
+      map(() => this.form.valid),
+      startWith(this.form.valid)
+    ),
+    { initialValue: this.form.valid }
+  );
+
+  readonly isSubmitDisabled = computed(() => this.isLoading() || !this.formValid());
 
   readonly isLoading = signal(false);
   readonly isPasswordHidden = signal(true);
-  readonly isSubmitDisabled = computed(() => this.isLoading() || this.form.invalid);
 
   submit(): void {
     if (this.form.invalid) {
@@ -86,7 +95,7 @@ export class LoginComponent {
         next: () => {
           this.snackBar.open('Bienvenido nuevamente 👋', 'Cerrar', {
             duration: 3000,
-            verticalPosition: 'top'
+            verticalPosition: 'top',
           });
           void this.router.navigateByUrl('/users');
         },
@@ -94,9 +103,9 @@ export class LoginComponent {
           const message = this.resolveErrorMessage(error as MockHttpError);
           this.snackBar.open(message, 'Cerrar', {
             duration: 5000,
-            verticalPosition: 'top'
+            verticalPosition: 'top',
           });
-        }
+        },
       });
   }
 
