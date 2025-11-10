@@ -2,14 +2,9 @@ import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs/operators';
-
 import { AppToolbar } from './shared/components/app-toolbar/app-toolbar';
 import { AuthService } from './core/auth/auth.service';
 import { TokenStorageService } from './core/auth/token-storage.service';
-import { RouterOutlet } from '@angular/router';
-
-import { AppToolbar } from './shared/components/app-toolbar/app-toolbar';
-
 @Component({
   selector: 'app-root',
   standalone: true,

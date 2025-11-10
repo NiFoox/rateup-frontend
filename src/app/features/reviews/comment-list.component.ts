@@ -41,7 +41,7 @@ import { avatarColor, fromNow } from '../../shared/utils/ui';
     MatTooltipModule
   ],
   templateUrl: './comment-list.component.html',
-  styleUrls: ['./comment-list.component.scss'],
+  styleUrl: './comment-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CommentListComponent implements OnChanges {
@@ -79,16 +79,10 @@ export class CommentListComponent implements OnChanges {
   }
 
   prepend(comment: Comment): void {
-    if (!this.reviewId) {
-      return;
-    }
     const next = [comment, ...this.comments()];
     this.comments.set(next);
-    this.page = 1;
-    const updatedTotal = this.total() + 1;
-    this.total.set(updatedTotal);
-    this.hasMore.set(updatedTotal > this.page * this.pageSize);
-    this.loadPage(1, false);
+    this.total.set(this.total() + 1);
+    this.hasMore.set(this.total() > this.comments().length);
   }
 
   protected loadMore(): void {
@@ -157,7 +151,7 @@ export class CommentListComponent implements OnChanges {
   }
 
   protected deleteComment(comment: Comment): void {
-    if (this.deletingId() || !this.reviewId || !this.isOwner(comment)) {
+    if (this.deletingId() || !this.reviewId) {
       return;
     }
     const userId = this.currentUser?.id ?? '';
@@ -178,12 +172,9 @@ export class CommentListComponent implements OnChanges {
         const filtered = this.comments().filter((item) => item.id !== comment.id);
         this.comments.set(filtered);
         this.deletingId.set(null);
-        const updatedTotal = Math.max(0, this.total() - 1);
-        this.total.set(updatedTotal);
-        this.page = 1;
-        this.hasMore.set(updatedTotal > this.page * this.pageSize);
+        this.total.set(Math.max(0, this.total() - 1));
+        this.hasMore.set(this.total() > this.comments().length);
         this.removed.emit(comment.id);
-        this.loadPage(1, false);
       },
       error: (error) => {
         this.deletingId.set(null);

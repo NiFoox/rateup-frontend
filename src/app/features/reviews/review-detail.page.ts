@@ -52,7 +52,7 @@ type VoteDirection = Exclude<VoteValue, 0>;
     CommentListComponent
   ],
   templateUrl: './review-detail.page.html',
-  styleUrls: ['./review-detail.page.scss'],
+  styleUrl: './review-detail.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReviewDetailPage {
