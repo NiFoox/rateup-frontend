@@ -1,5 +1,7 @@
+import { MatCardModule } from '@angular/material/card';
 import { CommonModule } from '@angular/common';
 import {
+  ChangeDetectionStrategy,
   Component,
   DestroyRef,
   ElementRef,
@@ -35,6 +37,7 @@ type SortOption = 'hot' | 'new' | 'top';
   standalone: true,
   imports: [
     CommonModule,
+    MatCardModule,
     RouterModule,
     ReactiveFormsModule,
     MatButtonModule,
@@ -48,7 +51,8 @@ type SortOption = 'hot' | 'new' | 'top';
     ReviewCardComponent
   ],
   templateUrl: './reviews.page.html',
-  styleUrl: './reviews.page.scss'
+  styleUrl: './reviews.page.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReviewsPage implements OnDestroy {
   protected readonly searchCtrl = new FormControl('', { nonNullable: true });

@@ -1,16 +1,42 @@
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterModule } from '@angular/router';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { RouterModule } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+
+import { AuthService } from '../../../core/auth/auth.service';
+import { TokenStorageService } from '../../../core/auth/token-storage.service';
+import { AuthUser } from '../../../core/auth/auth.models';
 
 @Component({
   selector: 'app-app-toolbar',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatToolbarModule, RouterModule],
+  imports: [CommonModule, RouterModule, MatToolbarModule, MatButtonModule, MatIconModule],
   templateUrl: './app-toolbar.html',
   styleUrl: './app-toolbar.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AppToolbar {}
+export class AppToolbar {
+  private readonly authService = inject(AuthService);
+  private readonly tokenStorage = inject(TokenStorageService);
+
+  readonly user = toSignal(this.authService.me(), {
+    initialValue: this.resolveInitialUser()
+  });
+
+  private resolveInitialUser(): AuthUser | null {
+    return this.tokenStorage.getUser();
+  }
+
+  hasRole(role: string): boolean {
+    const currentUser = this.user();
+
+    if (!currentUser) {
+      return false;
+    }
+
+    return currentUser.roles.includes(role);
+  }
+}

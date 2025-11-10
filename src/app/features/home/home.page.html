@@ -1,0 +1,31 @@
+<div class="home-wrapper">
+  @if (user(); as currentUser) {
+    <mat-card class="home-card" appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>
+          Hola, {{ currentUser.name }}
+        </mat-card-title>
+        <mat-card-subtitle>
+          {{ currentUser.email }}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-divider></mat-divider>
+
+      <mat-card-content>
+        <section class="info-section" aria-labelledby="roles-heading">
+          <h3 id="roles-heading">Roles</h3>
+          <div class="roles">
+            @if (currentUser.roles.length) {
+              @for (role of currentUser.roles; track role) {
+                <mat-chip color="primary" selected>{{ role }}</mat-chip>
+              }
+            } @else {
+              <span class="no-roles">Sin roles asignados</span>
+            }
+          </div>
+        </section>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

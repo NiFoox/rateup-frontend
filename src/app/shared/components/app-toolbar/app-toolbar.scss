@@ -1,38 +1,17 @@
-:host {
-  display: block;
-}
-
 .app-toolbar {
   position: sticky;
   top: 0;
-  z-index: 10;
-  backdrop-filter: blur(6px);
+  z-index: 1000;
 }
 
 .brand {
   font-weight: 600;
-  font-size: 1.1rem;
-  text-transform: none;
 }
 
 .spacer {
   flex: 1 1 auto;
 }
 
-a[mat-button] {
-  text-transform: none;
-}
-
-a.active {
-  background-color: color-mix(in srgb, var(--mat-sys-on-primary) 14%, transparent);
-}
-
-@media (max-width: 600px) {
-  .app-toolbar {
-    padding: 0 8px;
-  }
-
-  .brand {
-    font-size: 1rem;
-  }
+.active {
+  text-decoration: underline;
 }

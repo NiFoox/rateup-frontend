@@ -1,18 +1,60 @@
-<mat-toolbar color="primary" class="app-toolbar">
-  <a mat-button routerLink="/" class="brand" aria-label="Ir al inicio">
-    <mat-icon aria-hidden="true">sports_esports</mat-icon>
-    RateUp
-  </a>
+@if (user()) {
+  <mat-toolbar color="primary" class="app-toolbar">
+    <button
+      class="brand"
+      mat-button
+      routerLink="/home"
+      routerLinkActive="active"
+      aria-label="Ir a Home"
+    >
+      <mat-icon aria-hidden="true">home</mat-icon>
+      <span>RateUp</span>
+    </button>
 
-  <span class="spacer"></span>
+    <span class="spacer" aria-hidden="true"></span>
 
-  <a
-    mat-button
-    routerLink="/reviews"
-    routerLinkActive="active"
-    aria-label="Ir a las reseñas"
-    [routerLinkActiveOptions]="{ exact: true }"
-  >
-    Reseñas
-  </a>
-</mat-toolbar>
+    <button
+      mat-button
+      routerLink="/reviews"
+      routerLinkActive="active"
+      aria-label="Ir a Reseñas"
+    >
+      <mat-icon aria-hidden="true">rate_review</mat-icon>
+      <span>Reseñas</span>
+    </button>
+
+    @if (hasRole('editor') || hasRole('admin')) {
+      <button
+        mat-button
+        routerLink="/games"
+        routerLinkActive="active"
+        aria-label="Ir a Juegos"
+      >
+        <mat-icon aria-hidden="true">sports_esports</mat-icon>
+        <span>Juegos</span>
+      </button>
+    }
+
+    @if (hasRole('admin')) {
+      <button
+        mat-button
+        routerLink="/users"
+        routerLinkActive="active"
+        aria-label="Ir a Gestión de Usuarios"
+      >
+        <mat-icon aria-hidden="true">group</mat-icon>
+        <span>Usuarios</span>
+      </button>
+    }
+
+    <button
+      mat-button
+      routerLink="/profile"
+      routerLinkActive="active"
+      aria-label="Ir a Perfil"
+    >
+      <mat-icon aria-hidden="true">person</mat-icon>
+      <span>Perfil</span>
+    </button>
+  </mat-toolbar>
+}
