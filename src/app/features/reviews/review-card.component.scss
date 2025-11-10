@@ -48,6 +48,15 @@
   margin: 0;
   font-size: 1.15rem;
   line-height: 1.3;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
 }
 
 .rating {
@@ -90,8 +99,13 @@ mat-card-actions {
   gap: 8px;
 }
 
-mat-card-actions button mat-icon {
+mat-card-actions button mat-icon,
+mat-card-actions a mat-icon {
   margin-right: 4px;
+}
+
+mat-card-actions a {
+  text-decoration: none;
 }
 
 .skeleton-line {

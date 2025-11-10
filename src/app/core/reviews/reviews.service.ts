@@ -1,8 +1,16 @@
 import { Injectable } from '@angular/core';
 import { Observable, defer, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
+
 import { TokenStorage } from '../auth/token-storage';
-import { PagedResult, Review, ReviewsQuery } from './reviews.models';
+import {
+  Comment,
+  PagedResult,
+  Review,
+  ReviewWithUserVote,
+  ReviewsQuery,
+  VoteValue
+} from './reviews.models';
 import { REVIEWS_SEED } from './reviews.seed';
 
 interface StorageLike {
@@ -11,11 +19,11 @@ interface StorageLike {
   removeItem(key: string): void;
 }
 
-type VoteMap = Record<string, -1 | 1>;
-type VoteState = -1 | 0 | 1;
+type VoteMap = Record<string, VoteValue>;
 
 const REVIEWS_STORAGE_KEY = 'app.reviews';
 const VOTES_STORAGE_PREFIX = 'app.reviewVotes.';
+const COMMENTS_STORAGE_PREFIX = 'app.comments.';
 
 const resolveStorage = (): StorageLike | null => {
   try {
@@ -28,78 +36,274 @@ const resolveStorage = (): StorageLike | null => {
   return null;
 };
 
-const clampPage = (value: number): number => (value < 1 ? 1 : Math.floor(value));
+const clampPage = (value: number): number => {
+  if (!Number.isFinite(value) || value < 1) {
+    return 1;
+  }
+  return Math.floor(value);
+};
+
+const normalizePageSize = (value: number): number => {
+  if (!Number.isFinite(value) || value <= 0) {
+    return 10;
+  }
+  return Math.floor(value);
+};
+
+const cloneReview = (review: Review): Review => ({
+  ...review,
+  tags: [...review.tags]
+});
+
+const cloneComment = (comment: Comment): Comment => ({ ...comment });
+
+const generateId = (): string => {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID();
+  }
+  return `comment-${Math.random().toString(36).slice(2, 11)}-${Date.now()}`;
+};
 
 @Injectable({ providedIn: 'root' })
 export class ReviewsService {
   private readonly storage = resolveStorage();
   private reviews: Review[] = [];
   private memoryVotes = new Map<string, VoteMap>();
+  private memoryComments = new Map<string, Comment[]>();
 
   constructor() {
     this.reviews = this.loadReviews();
   }
 
-  list(query: ReviewsQuery): Observable<PagedResult<Review>> {
+  list(query: ReviewsQuery): Observable<PagedResult<ReviewWithUserVote>> {
     const normalized = this.normalizeQuery(query);
 
     return defer(() => {
       const user = TokenStorage.getUser();
-      const votes = this.loadVoteMap(user.id);
-      const decorated = this.decorateWithUserVote(this.applyQuery(normalized), votes);
-      const total = decorated.length;
+      const userId = user?.id ?? '';
+      const votes = userId ? this.loadVoteMap(userId) : {};
+      const filtered = this.applyQuery(normalized);
+      const total = filtered.length;
       const start = (normalized.page - 1) * normalized.pageSize;
       const end = start + normalized.pageSize;
-      const items = decorated.slice(start, end);
+      const slice = filtered.slice(start, end);
+      const items = slice.map((review) => this.decorateReview(review, votes));
 
-      return of({
+      const result: PagedResult<ReviewWithUserVote> = {
         items,
         total,
         page: normalized.page,
         pageSize: normalized.pageSize
+      };
+
+      return of(result);
+    }).pipe(delay(this.randomDelay()));
+  }
+
+  getById(id: string): Observable<ReviewWithUserVote> {
+    return defer(() => {
+      const review = this.reviews.find((item) => item.id === id);
+      if (!review) {
+        throw new Error('Review no encontrada');
+      }
+
+      const user = TokenStorage.getUser();
+      const userId = user?.id ?? '';
+      const votes = userId ? this.loadVoteMap(userId) : {};
+      const decorated = this.decorateReview(review, votes);
+      return of(decorated);
+    }).pipe(delay(this.randomDelay()));
+  }
+
+  vote(reviewId: string, value: VoteValue, userId: string): Observable<{
+    review: Review;
+    userVote: VoteValue;
+  }> {
+    return defer(() => {
+      if (!userId) {
+        throw new Error('Usuario no autenticado');
+      }
+
+      const index = this.reviews.findIndex((item) => item.id === reviewId);
+      if (index === -1) {
+        throw new Error('Review no encontrada');
+      }
+
+      const votes = this.loadVoteMap(userId);
+      const current = votes[reviewId] ?? 0;
+      const next: VoteValue = current === value ? 0 : value;
+      const delta = next - current;
+
+      const target = this.reviews[index];
+      const updated: Review = {
+        ...target,
+        votes: target.votes + delta
+      };
+
+      this.reviews = [...this.reviews];
+      this.reviews[index] = updated;
+      this.persistReviews();
+
+      if (next === 0) {
+        delete votes[reviewId];
+      } else {
+        votes[reviewId] = next;
+      }
+      this.persistVoteMap(userId, votes);
+
+      return of({
+        review: cloneReview(updated),
+        userVote: next
       });
     }).pipe(delay(this.randomDelay()));
   }
 
-  vote(id: string, delta: -1 | 1): Observable<Review> {
+  getComments(reviewId: string, page: number, pageSize: number): Observable<PagedResult<Comment>> {
+    const normalizedPage = clampPage(page);
+    const normalizedSize = normalizePageSize(pageSize);
+
     return defer(() => {
-      const index = this.reviews.findIndex((review) => review.id === id);
-      if (index === -1) {
-        throw new Error('Review not found');
-      }
+      const comments = this.loadComments(reviewId);
+      const sorted = [...comments].sort(
+        (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)
+      );
+      const start = (normalizedPage - 1) * normalizedSize;
+      const end = start + normalizedSize;
+      const items = sorted.slice(start, end).map(cloneComment);
 
-      const user = TokenStorage.getUser();
-      const votes = this.loadVoteMap(user.id);
-      const review = this.reviews[index];
-      const currentVote = votes[id] ?? 0;
-      const nextVote: VoteState = currentVote === delta ? 0 : delta;
-      const voteDelta = nextVote - currentVote;
-      const updatedScore = review.votes + voteDelta;
-
-      const persisted: Review = {
-        ...review,
-        votes: updatedScore,
-        userVote: undefined
+      const result: PagedResult<Comment> = {
+        items,
+        total: sorted.length,
+        page: normalizedPage,
+        pageSize: normalizedSize
       };
 
-      const reviews = [...this.reviews];
-      reviews[index] = persisted;
-      this.reviews = reviews;
+      return of(result);
+    }).pipe(delay(this.randomDelay()));
+  }
+
+  addComment(
+    reviewId: string,
+    body: string,
+    userId: string,
+    authorName: string
+  ): Observable<Comment> {
+    return defer(() => {
+      const trimmed = body.trim();
+      if (trimmed.length < 2) {
+        throw new Error('El comentario es demasiado corto');
+      }
+      if (!userId) {
+        throw new Error('Usuario no autenticado');
+      }
+
+      const reviewIndex = this.reviews.findIndex((item) => item.id === reviewId);
+      if (reviewIndex === -1) {
+        throw new Error('Review no encontrada');
+      }
+
+      const now = new Date().toISOString();
+      const comment: Comment = {
+        id: generateId(),
+        reviewId,
+        authorId: userId,
+        authorName,
+        body: trimmed,
+        createdAt: now
+      };
+
+      const comments = [comment, ...this.loadComments(reviewId)];
+      this.persistComments(reviewId, comments);
+
+      const review = this.reviews[reviewIndex];
+      const updatedReview: Review = {
+        ...review,
+        comments: review.comments + 1
+      };
+      this.reviews = [...this.reviews];
+      this.reviews[reviewIndex] = updatedReview;
       this.persistReviews();
 
-      if (nextVote === 0) {
-        delete votes[id];
-      } else {
-        votes[id] = nextVote as -1 | 1;
-      }
-      this.persistVoteMap(user.id, votes);
+      return of(cloneComment(comment));
+    }).pipe(delay(this.randomDelay()));
+  }
 
-      const hydrated: Review = {
-        ...persisted,
-        userVote: nextVote
+  editComment(
+    reviewId: string,
+    commentId: string,
+    body: string,
+    userId: string
+  ): Observable<Comment> {
+    return defer(() => {
+      if (!userId) {
+        throw new Error('Usuario no autenticado');
+      }
+      const trimmed = body.trim();
+      if (trimmed.length < 2) {
+        throw new Error('El comentario es demasiado corto');
+      }
+
+      const comments = this.loadComments(reviewId);
+      const index = comments.findIndex((comment) => comment.id === commentId);
+      if (index === -1) {
+        throw new Error('Comentario no encontrado');
+      }
+
+      const target = comments[index];
+      if (target.authorId !== userId) {
+        throw new Error('No autorizado');
+      }
+
+      const updated: Comment = {
+        ...target,
+        body: trimmed,
+        updatedAt: new Date().toISOString()
       };
 
-      return of(hydrated);
+      const nextComments = [...comments];
+      nextComments[index] = updated;
+      this.persistComments(reviewId, nextComments);
+
+      return of(cloneComment(updated));
+    }).pipe(delay(this.randomDelay()));
+  }
+
+  deleteComment(reviewId: string, commentId: string, userId: string): Observable<void> {
+    return defer(() => {
+      if (!userId) {
+        throw new Error('Usuario no autenticado');
+      }
+
+      const comments = this.loadComments(reviewId);
+      const index = comments.findIndex((comment) => comment.id === commentId);
+      if (index === -1) {
+        throw new Error('Comentario no encontrado');
+      }
+
+      const target = comments[index];
+      const currentUser = TokenStorage.getUser();
+      const isAdmin = currentUser?.roles?.includes('admin');
+      if (target.authorId !== userId && !isAdmin) {
+        throw new Error('No autorizado');
+      }
+
+      const nextComments = [...comments];
+      nextComments.splice(index, 1);
+      this.persistComments(reviewId, nextComments);
+
+      const reviewIndex = this.reviews.findIndex((item) => item.id === reviewId);
+      if (reviewIndex !== -1) {
+        const review = this.reviews[reviewIndex];
+        const updated: Review = {
+          ...review,
+          comments: Math.max(0, review.comments - 1)
+        };
+        this.reviews = [...this.reviews];
+        this.reviews[reviewIndex] = updated;
+        this.persistReviews();
+      }
+
+      return of(void 0);
     }).pipe(delay(this.randomDelay()));
   }
 
@@ -119,7 +323,7 @@ export class ReviewsService {
   }
 
   private normalizeQuery(query: ReviewsQuery): ReviewsQuery {
-    const pageSize = query.pageSize > 0 ? Math.floor(query.pageSize) : 10;
+    const pageSize = normalizePageSize(query.pageSize);
     const normalized: ReviewsQuery = {
       page: clampPage(query.page),
       pageSize,
@@ -161,14 +365,15 @@ export class ReviewsService {
 
     filtered = this.sortReviews(filtered, query.sort ?? 'hot');
 
-    return filtered.map((review) => ({ ...review }));
+    return filtered.map(cloneReview);
   }
 
-  private decorateWithUserVote(reviews: Review[], votes: VoteMap): Review[] {
-    return reviews.map((review) => ({
-      ...review,
-      userVote: votes[review.id] ?? 0
-    }));
+  private decorateReview(review: Review, votes: VoteMap): ReviewWithUserVote {
+    const userVote = votes[review.id] ?? 0;
+    return {
+      ...cloneReview(review),
+      userVote
+    };
   }
 
   private sortReviews(reviews: Review[], sort: 'hot' | 'new' | 'top'): Review[] {
@@ -189,32 +394,32 @@ export class ReviewsService {
   }
 
   private randomDelay(): number {
-    return 400 + Math.floor(Math.random() * 401);
+    return 300 + Math.floor(Math.random() * 401);
   }
 
   private loadReviews(): Review[] {
     const storage = this.storage;
     if (!storage) {
-      return REVIEWS_SEED.map((review) => ({ ...review }));
+      return REVIEWS_SEED.map(cloneReview);
     }
 
     const raw = storage.getItem(REVIEWS_STORAGE_KEY);
     if (!raw) {
       storage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(REVIEWS_SEED));
-      return REVIEWS_SEED.map((review) => ({ ...review }));
+      return REVIEWS_SEED.map(cloneReview);
     }
 
     try {
       const parsed = JSON.parse(raw) as Review[];
       if (Array.isArray(parsed) && parsed.length) {
-        return parsed.map((review) => ({ ...review, tags: [...review.tags] }));
+        return parsed.map(cloneReview);
       }
     } catch {
       // Ignore malformed data and fall back to the seed.
     }
 
     storage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(REVIEWS_SEED));
-    return REVIEWS_SEED.map((review) => ({ ...review }));
+    return REVIEWS_SEED.map(cloneReview);
   }
 
   private persistReviews(): void {
@@ -227,6 +432,10 @@ export class ReviewsService {
   }
 
   private loadVoteMap(userId: string): VoteMap {
+    if (!userId) {
+      return {};
+    }
+
     const storage = this.storage;
     if (!storage) {
       return this.memoryVotes.get(userId) ?? {};
@@ -238,20 +447,27 @@ export class ReviewsService {
     }
 
     try {
-      const parsed = JSON.parse(raw) as Record<string, VoteState>;
-      const validEntries = Object.entries(parsed).reduce<VoteMap>((acc, [key, value]) => {
-        if (value === -1 || value === 1) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {});
-      return validEntries;
+      const parsed = JSON.parse(raw) as VoteMap;
+      if (parsed && typeof parsed === 'object') {
+        return Object.entries(parsed).reduce<VoteMap>((acc, [key, value]) => {
+          if (value === -1 || value === 0 || value === 1) {
+            acc[key] = value;
+          }
+          return acc;
+        }, {});
+      }
     } catch {
-      return {};
+      // Ignore malformed vote maps.
     }
+
+    return {};
   }
 
   private persistVoteMap(userId: string, voteMap: VoteMap): void {
+    if (!userId) {
+      return;
+    }
+
     const storage = this.storage;
     if (!storage) {
       if (Object.keys(voteMap).length === 0) {
@@ -269,5 +485,56 @@ export class ReviewsService {
     }
 
     storage.setItem(key, JSON.stringify(voteMap));
+  }
+
+  private loadComments(reviewId: string): Comment[] {
+    if (!reviewId) {
+      return [];
+    }
+
+    const storage = this.storage;
+    if (!storage) {
+      return this.memoryComments.get(reviewId)?.map(cloneComment) ?? [];
+    }
+
+    const raw = storage.getItem(`${COMMENTS_STORAGE_PREFIX}${reviewId}`);
+    if (!raw) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as Comment[];
+      if (Array.isArray(parsed)) {
+        return parsed.map(cloneComment);
+      }
+    } catch {
+      // Ignore malformed data.
+    }
+
+    return [];
+  }
+
+  private persistComments(reviewId: string, comments: Comment[]): void {
+    if (!reviewId) {
+      return;
+    }
+
+    const storage = this.storage;
+    if (!storage) {
+      if (comments.length === 0) {
+        this.memoryComments.delete(reviewId);
+      } else {
+        this.memoryComments.set(reviewId, comments.map(cloneComment));
+      }
+      return;
+    }
+
+    const key = `${COMMENTS_STORAGE_PREFIX}${reviewId}`;
+    if (comments.length === 0) {
+      storage.removeItem(key);
+      return;
+    }
+
+    storage.setItem(key, JSON.stringify(comments));
   }
 }

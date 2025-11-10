@@ -16,6 +16,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/home/home.page').then((m) => m.HomePage)
   },
   {
+    path: 'reviews/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/reviews/review-detail.page').then((m) => m.ReviewDetailPage)
+  },
+  {
     path: 'reviews',
     canActivate: [authGuard],
     loadComponent: () => import('./features/reviews/reviews.page').then((m) => m.ReviewsPage)

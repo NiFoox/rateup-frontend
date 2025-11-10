@@ -8,10 +8,29 @@ export interface Review {
   rating: number;
   body: string;
   votes: number;
-  userVote?: -1 | 0 | 1;
   comments: number;
   createdAt: string;
   updatedAt?: string;
+}
+
+export type VoteValue = -1 | 0 | 1;
+
+export interface ReviewVote {
+  reviewId: string;
+  userId: string;
+  value: VoteValue;
+  updatedAt: string;
+}
+
+export interface Comment {
+  id: string;
+  reviewId: string;
+  authorId: string;
+  authorName: string;
+  body: string;
+  createdAt: string;
+  updatedAt?: string;
+  votes?: number;
 }
 
 export interface ReviewsQuery {
@@ -28,4 +47,8 @@ export interface PagedResult<T> {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface ReviewWithUserVote extends Review {
+  userVote: VoteValue;
 }
