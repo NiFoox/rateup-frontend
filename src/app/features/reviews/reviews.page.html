@@ -1,3 +1,76 @@
-<mat-card appearance="outlined">
-  <mat-card-title>Reseñas</mat-card-title>
-</mat-card>
+<section class="reviews-header" aria-label="Filtros de reseñas">
+  <h1 class="page-title">Reseñas de la comunidad</h1>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Buscar</mat-label>
+    <input
+      matInput
+      [formControl]="searchCtrl"
+      placeholder="Título, juego, autor..."
+      aria-label="Buscar reviews"
+    />
+    <button
+      *ngIf="searchCtrl.value"
+      mat-icon-button
+      matSuffix
+      type="button"
+      (click)="searchCtrl.setValue('')"
+      aria-label="Limpiar búsqueda"
+      matTooltip="Limpiar búsqueda"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Tag</mat-label>
+    <mat-select [formControl]="tagCtrl" aria-label="Filtrar por tag">
+      <mat-option value="">Todos</mat-option>
+      @for (tag of tags(); track tag) {
+        <mat-option [value]="tag">{{ tag }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Juego</mat-label>
+    <mat-select [formControl]="gameCtrl" aria-label="Filtrar por juego">
+      <mat-option value="">Todos</mat-option>
+      @for (game of games(); track game) {
+        <mat-option [value]="game">{{ game }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-button-toggle-group
+    [value]="sort()"
+    (change)="onSortChange($event)"
+    aria-label="Ordenar reseñas"
+  >
+    <mat-button-toggle value="hot">Hot</mat-button-toggle>
+    <mat-button-toggle value="new">Nuevas</mat-button-toggle>
+    <mat-button-toggle value="top">Top</mat-button-toggle>
+  </mat-button-toggle-group>
+</section>
+
+<section class="feed" aria-live="polite">
+  @if (loading()) {
+    @for (skeleton of skeletons; track skeleton) {
+      <app-review-card [skeleton]="true" />
+    }
+  } @else {
+    @if (items().length === 0) {
+      <p class="empty">No hay resultados</p>
+    } @else {
+      @for (review of items(); track review.id) {
+        <app-review-card [review]="review" (vote)="onVote(review, $event)" />
+      }
+      <div #sentinel class="sentinel" aria-hidden="true"></div>
+      @if (loadingMore()) {
+        <div class="loading-more">
+          <mat-progress-spinner mode="indeterminate" diameter="32"></mat-progress-spinner>
+        </div>
+      }
+    }
+  }
+</section>

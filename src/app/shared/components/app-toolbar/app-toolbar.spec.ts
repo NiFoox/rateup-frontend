@@ -1,3 +1,5 @@
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { provideRouter } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 
@@ -28,6 +30,7 @@ describe('AppToolbar', () => {
         { provide: AuthService, useClass: AuthServiceStub },
         { provide: TokenStorageService, useClass: TokenStorageServiceStub }
       ]
+      providers: [provideRouter([]), provideNoopAnimations()]
     }).compileComponents();
 
     fixture = TestBed.createComponent(AppToolbar);
@@ -37,5 +40,10 @@ describe('AppToolbar', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should show reviews navigation link', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Reseñas');
   });
 });

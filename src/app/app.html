@@ -1,6 +1,6 @@
-@if (showToolbar()) {
-  <app-app-toolbar />
-}
-<main class="app-content">
-  <router-outlet />
-</main>
+<div class="app-shell">
+  <app-app-toolbar></app-app-toolbar>
+  <main class="app-main" role="main">
+    <router-outlet></router-outlet>
+  </main>
+</div>
