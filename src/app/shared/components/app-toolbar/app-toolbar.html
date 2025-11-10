@@ -1,1 +1,18 @@
-<p>app-toolbar works!</p>
+<mat-toolbar color="primary" class="app-toolbar">
+  <a mat-button routerLink="/" class="brand" aria-label="Ir al inicio">
+    <mat-icon aria-hidden="true">sports_esports</mat-icon>
+    RateUp
+  </a>
+
+  <span class="spacer"></span>
+
+  <a
+    mat-button
+    routerLink="/reviews"
+    routerLinkActive="active"
+    aria-label="Ir a las reseñas"
+    [routerLinkActiveOptions]="{ exact: true }"
+  >
+    Reseñas
+  </a>
+</mat-toolbar>

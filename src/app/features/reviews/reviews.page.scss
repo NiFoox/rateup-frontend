@@ -1,0 +1,66 @@
+:host {
+  display: block;
+  padding-bottom: 48px;
+}
+
+.reviews-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px 200px auto;
+  gap: 12px;
+  align-items: center;
+  max-width: 980px;
+  margin: 24px auto 12px;
+  padding: 0 16px;
+}
+
+.page-title {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+mat-form-field,
+mat-button-toggle-group {
+  width: 100%;
+}
+
+mat-button-toggle-group {
+  justify-self: end;
+}
+
+.feed {
+  display: grid;
+  gap: 12px;
+  max-width: 860px;
+  margin: 16px auto;
+  padding: 0 16px;
+}
+
+.loading-more {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 24px;
+}
+
+.sentinel {
+  height: 1px;
+}
+
+.empty {
+  margin: 48px auto;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+@media (max-width: 768px) {
+  .reviews-header {
+    grid-template-columns: 1fr;
+    margin-top: 16px;
+    gap: 16px;
+  }
+
+  mat-button-toggle-group {
+    justify-self: start;
+  }
+}
