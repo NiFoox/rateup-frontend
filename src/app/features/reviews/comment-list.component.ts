@@ -46,7 +46,7 @@ import { avatarColor, fromNow } from '../../shared/utils/ui';
 })
 export class CommentListComponent implements OnChanges {
   @Input() reviewId = '';
-  @Output() removed = new EventEmitter<string>();
+  @Output() changed = new EventEmitter<void>();
 
   protected readonly comments = signal<Comment[]>([]);
   protected readonly loading = signal(false);
@@ -63,6 +63,7 @@ export class CommentListComponent implements OnChanges {
   protected readonly relative = fromNow;
   protected readonly colorFor = avatarColor;
   protected readonly currentUser = TokenStorage.getUser();
+  protected readonly isAdmin = this.currentUser?.roles?.includes('admin') ?? false;
 
   private readonly reviewsService = inject(ReviewsService);
   private readonly snackBar = inject(MatSnackBar);
@@ -79,13 +80,25 @@ export class CommentListComponent implements OnChanges {
   }
 
   prepend(comment: Comment): void {
-    const next = [comment, ...this.comments()];
+    const current = this.comments();
+    const next = [comment, ...current];
+    const nextTotal = this.total() + 1;
+
     this.comments.set(next);
-    this.total.set(this.total() + 1);
-    this.hasMore.set(this.total() > this.comments().length);
+    this.total.set(nextTotal);
+    this.hasMore.set(nextTotal > next.length);
+    this.changed.emit();
   }
 
-  protected loadMore(): void {
+  reload(): void {
+    if (!this.reviewId) {
+      return;
+    }
+    this.reset();
+    this.loadPage(1, false);
+  }
+
+  loadMore(): void {
     if (this.loading() || this.loadingMore() || !this.hasMore()) {
       return;
     }
@@ -96,8 +109,16 @@ export class CommentListComponent implements OnChanges {
     return !!comment && comment.authorId === this.currentUser?.id;
   }
 
+  protected canEdit(comment: Comment): boolean {
+    return this.isOwner(comment);
+  }
+
+  protected canDelete(comment: Comment): boolean {
+    return this.isOwner(comment) || this.isAdmin;
+  }
+
   protected startEdit(comment: Comment): void {
-    if (!this.isOwner(comment) || this.savingEdit()) {
+    if (!this.canEdit(comment) || this.savingEdit()) {
       return;
     }
     this.editingId.set(comment.id);
@@ -108,23 +129,26 @@ export class CommentListComponent implements OnChanges {
     this.editingId.set(null);
     this.editControl.setValue('');
     this.editControl.markAsPristine();
+    this.editControl.markAsUntouched();
   }
 
   protected saveEdit(comment: Comment): void {
-    if (!this.isOwner(comment) || this.editControl.invalid || this.savingEdit()) {
+    if (!this.canEdit(comment) || this.editControl.invalid || this.savingEdit()) {
       return;
     }
     const userId = this.currentUser?.id ?? '';
     if (!userId) {
       this.snackBar.open('Necesitas iniciar sesión para editar', 'Cerrar', {
-        duration: 3000
+        duration: 3000,
+        politeness: 'polite'
       });
       return;
     }
     const value = this.editControl.value.trim();
     if (value.length < 2) {
       this.snackBar.open('El comentario es demasiado corto', 'Cerrar', {
-        duration: 3000
+        duration: 3000,
+        politeness: 'polite'
       });
       return;
     }
@@ -141,23 +165,25 @@ export class CommentListComponent implements OnChanges {
         }
         this.savingEdit.set(false);
         this.cancelEdit();
+        this.changed.emit();
       },
       error: (error) => {
         this.savingEdit.set(false);
         const message = error instanceof Error ? error.message : 'No se pudo editar el comentario';
-        this.snackBar.open(message, 'Cerrar', { duration: 3000 });
+        this.snackBar.open(message, 'Cerrar', { duration: 3000, politeness: 'polite' });
       }
     });
   }
 
   protected deleteComment(comment: Comment): void {
-    if (this.deletingId() || !this.reviewId) {
+    if (this.deletingId() || !this.reviewId || !this.canDelete(comment)) {
       return;
     }
     const userId = this.currentUser?.id ?? '';
     if (!userId) {
       this.snackBar.open('Necesitas iniciar sesión para eliminar', 'Cerrar', {
-        duration: 3000
+        duration: 3000,
+        politeness: 'polite'
       });
       return;
     }
@@ -172,14 +198,15 @@ export class CommentListComponent implements OnChanges {
         const filtered = this.comments().filter((item) => item.id !== comment.id);
         this.comments.set(filtered);
         this.deletingId.set(null);
-        this.total.set(Math.max(0, this.total() - 1));
-        this.hasMore.set(this.total() > this.comments().length);
-        this.removed.emit(comment.id);
+        const nextTotal = Math.max(0, this.total() - 1);
+        this.total.set(nextTotal);
+        this.hasMore.set(nextTotal > filtered.length);
+        this.changed.emit();
       },
       error: (error) => {
         this.deletingId.set(null);
         const message = error instanceof Error ? error.message : 'No se pudo eliminar el comentario';
-        this.snackBar.open(message, 'Cerrar', { duration: 3000 });
+        this.snackBar.open(message, 'Cerrar', { duration: 3000, politeness: 'polite' });
       }
     });
   }
@@ -194,6 +221,7 @@ export class CommentListComponent implements OnChanges {
     this.editingId.set(null);
     this.editControl.setValue('');
     this.editControl.markAsPristine();
+    this.editControl.markAsUntouched();
   }
 
   private loadPage(page: number, append: boolean): void {
@@ -223,8 +251,12 @@ export class CommentListComponent implements OnChanges {
         this.loading.set(false);
         this.loadingMore.set(false);
         const message = error instanceof Error ? error.message : 'No se pudieron cargar los comentarios';
-        this.snackBar.open(message, 'Cerrar', { duration: 3000 });
+        this.snackBar.open(message, 'Cerrar', { duration: 3000, politeness: 'polite' });
       }
     });
+  }
+
+  totalCount(): number {
+    return this.total();
   }
 }

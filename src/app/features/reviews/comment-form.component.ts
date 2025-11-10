@@ -59,7 +59,8 @@ export class CommentFormComponent {
 
     if (!userId || !authorName) {
       this.snackBar.open('Necesitas iniciar sesión para comentar', 'Cerrar', {
-        duration: 3000
+        duration: 3000,
+        politeness: 'polite'
       });
       return;
     }
@@ -67,7 +68,8 @@ export class CommentFormComponent {
     const value = this.control.value.trim();
     if (value.length < 2) {
       this.snackBar.open('El comentario es demasiado corto', 'Cerrar', {
-        duration: 3000
+        duration: 3000,
+        politeness: 'polite'
       });
       return;
     }
@@ -84,7 +86,7 @@ export class CommentFormComponent {
       error: (error) => {
         this.submitting.set(false);
         const message = error instanceof Error ? error.message : 'No se pudo publicar el comentario';
-        this.snackBar.open(message, 'Cerrar', { duration: 3000 });
+        this.snackBar.open(message, 'Cerrar', { duration: 3000, politeness: 'polite' });
       }
     });
   }

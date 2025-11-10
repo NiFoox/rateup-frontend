@@ -82,7 +82,7 @@
         <h2>Comentarios ({{ review.comments }})</h2>
       </header>
       <app-comment-form [reviewId]="review.id" (created)="onCommentCreated($event)"></app-comment-form>
-      <app-comment-list [reviewId]="review.id" (removed)="onCommentRemoved()"></app-comment-list>
+      <app-comment-list [reviewId]="review.id" (changed)="onCommentsChanged()"></app-comment-list>
     </section>
   }
 </section>

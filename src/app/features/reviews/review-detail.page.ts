@@ -77,7 +77,10 @@ export class ReviewDetailPage {
         switchMap((id) => {
           if (!id) {
             this.loading.set(false);
-            this.snackBar.open('Reseña no encontrada', 'Cerrar', { duration: 3000 });
+            this.snackBar.open('Reseña no encontrada', 'Cerrar', {
+              duration: 3000,
+              politeness: 'polite'
+            });
             this.router.navigate(['/reviews']);
             return EMPTY;
           }
@@ -86,7 +89,7 @@ export class ReviewDetailPage {
             catchError((error) => {
               this.loading.set(false);
               const message = error instanceof Error ? error.message : 'No se pudo cargar la reseña';
-              this.snackBar.open(message, 'Cerrar', { duration: 3000 });
+              this.snackBar.open(message, 'Cerrar', { duration: 3000, politeness: 'polite' });
               this.router.navigate(['/reviews']);
               return EMPTY;
             })
@@ -109,7 +112,8 @@ export class ReviewDetailPage {
     const user = TokenStorage.getUser();
     if (!user?.id) {
       this.snackBar.open('Necesitas iniciar sesión para votar', 'Cerrar', {
-        duration: 3000
+        duration: 3000,
+        politeness: 'polite'
       });
       return;
     }
@@ -135,25 +139,38 @@ export class ReviewDetailPage {
         this.review.set(current);
         this.loadingVote.set(false);
         const message = error instanceof Error ? error.message : 'No se pudo registrar el voto';
-        this.snackBar.open(message, 'Cerrar', { duration: 3000 });
+        this.snackBar.open(message, 'Cerrar', { duration: 3000, politeness: 'polite' });
       }
     });
   }
 
   protected onCommentCreated(comment: Comment): void {
+    if (this.commentList) {
+      this.commentList.prepend(comment);
+      return;
+    }
+
     const current = this.review();
     if (!current) {
       return;
     }
-    this.review.set({ ...current, comments: current.comments + 1 });
-    this.commentList?.prepend(comment);
+
+    const nextTotal = current.comments + 1;
+    this.review.set({ ...current, comments: nextTotal });
+    this.reviewsService.syncCommentCount(current.id, nextTotal);
   }
 
-  protected onCommentRemoved(): void {
+  protected onCommentsChanged(): void {
+    const list = this.commentList;
+    const total = list?.totalCount();
     const current = this.review();
-    if (!current) {
+    if (!list || total === undefined || !current) {
       return;
     }
-    this.review.set({ ...current, comments: Math.max(0, current.comments - 1) });
+
+    if (current.comments !== total) {
+      this.review.set({ ...current, comments: total });
+      this.reviewsService.syncCommentCount(current.id, total);
+    }
   }
 }
