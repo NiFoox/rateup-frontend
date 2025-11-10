@@ -49,7 +49,13 @@
       } @else if (review) {
         <header class="review-header">
           <div class="title-row">
-            <h3 class="title">{{ review.title }}</h3>
+            <a
+              class="title"
+              [routerLink]="['/reviews', review.id]"
+              [attr.aria-label]="'Abrir detalle de ' + review.title"
+            >
+              {{ review.title }}
+            </a>
             <span
               class="rating"
               [attr.aria-label]="'Calificación ' + review.rating + ' sobre 10'"
@@ -63,10 +69,10 @@
             <span class="separator" aria-hidden="true">•</span>
             <span class="author">por {{ review.authorName }}</span>
             <span class="separator" aria-hidden="true">•</span>
-            <span class="date">{{ relativeDate(review.createdAt) }}</span>
+            <span class="date">{{ relative(review.createdAt) }}</span>
             @if (review.updatedAt) {
               <span class="separator" aria-hidden="true">•</span>
-              <span class="updated">actualizado {{ relativeDate(review.updatedAt) }}</span>
+              <span class="updated">actualizado {{ relative(review.updatedAt) }}</span>
             }
           </p>
         </header>
@@ -82,20 +88,19 @@
         <mat-divider></mat-divider>
 
         <mat-card-actions align="start">
-          <button
+          <a
             mat-button
-            type="button"
-            color="primary"
-            aria-label="Comentar review"
+            [routerLink]="['/reviews', review.id]"
+            aria-label="Abrir comentarios"
           >
             <mat-icon>mode_comment</mat-icon>
-            Comentar
+            Comentarios
             <span class="count" aria-hidden="true">({{ review.comments }})</span>
-          </button>
-          <button mat-button type="button" aria-label="Compartir review">
-            <mat-icon>share</mat-icon>
-            Compartir
-          </button>
+          </a>
+          <a mat-button [routerLink]="['/reviews', review.id]" aria-label="Ver detalle de la reseña">
+            <mat-icon>open_in_new</mat-icon>
+            Ver
+          </a>
         </mat-card-actions>
       }
     </div>

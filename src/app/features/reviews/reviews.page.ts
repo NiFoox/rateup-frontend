@@ -19,16 +19,18 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
 import { Subscription, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
 
-import { Review, ReviewsQuery } from '../../core/reviews/reviews.models';
+import { ReviewWithUserVote, ReviewsQuery, VoteValue } from '../../core/reviews/reviews.models';
 import { ReviewsService } from '../../core/reviews/reviews.service';
+import { TokenStorage } from '../../core/auth/token-storage';
 import { ReviewCardComponent } from './review-card.component';
 
-type VoteDirection = -1 | 1;
+type VoteDirection = Exclude<VoteValue, 0>;
 
 type SortOption = 'hot' | 'new' | 'top';
 
@@ -47,6 +49,7 @@ type SortOption = 'hot' | 'new' | 'top';
     MatInputModule,
     MatProgressSpinnerModule,
     MatSelectModule,
+    MatSnackBarModule,
     MatTooltipModule,
     ReviewCardComponent
   ],
@@ -59,7 +62,7 @@ export class ReviewsPage implements OnDestroy {
   protected readonly tagCtrl = new FormControl('', { nonNullable: true });
   protected readonly gameCtrl = new FormControl('', { nonNullable: true });
 
-  protected readonly items = signal<Review[]>([]);
+  protected readonly items = signal<ReviewWithUserVote[]>([]);
   protected readonly loading = signal(true);
   protected readonly loadingMore = signal(false);
   protected readonly hasMore = signal(true);
@@ -81,6 +84,7 @@ export class ReviewsPage implements OnDestroy {
   }
 
   private readonly reviewsService = inject(ReviewsService);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
   private currentQuery: ReviewsQuery = {
     page: 1,
@@ -110,19 +114,27 @@ export class ReviewsPage implements OnDestroy {
     }
   }
 
-  protected onVote(review: Review, direction: VoteDirection): void {
+  protected onVote(review: ReviewWithUserVote, direction: VoteDirection): void {
     const snapshot = this.items();
     const index = snapshot.findIndex((item) => item.id === review.id);
     if (index === -1) {
       return;
     }
 
+    const user = TokenStorage.getUser();
+    if (!user?.id) {
+      this.snackBar.open('Necesitas iniciar sesión para votar', 'Cerrar', {
+        duration: 3000
+      });
+      return;
+    }
+
     const previous = snapshot[index];
     const previousVote = previous.userVote ?? 0;
-    const nextVote = previousVote === direction ? 0 : direction;
+    const nextVote: VoteValue = previousVote === direction ? 0 : direction;
     const voteDelta = nextVote - previousVote;
 
-    const optimistic: Review = {
+    const optimistic: ReviewWithUserVote = {
       ...previous,
       votes: previous.votes + voteDelta,
       userVote: nextVote
@@ -132,19 +144,24 @@ export class ReviewsPage implements OnDestroy {
     optimisticItems[index] = optimistic;
     this.items.set(optimisticItems);
 
-    this.reviewsService.vote(review.id, direction).subscribe({
-      next: (updated) => {
+    this.reviewsService.vote(review.id, direction, user.id).subscribe({
+      next: ({ review: updated, userVote }) => {
         const current = this.items();
         const currentIndex = current.findIndex((item) => item.id === updated.id);
         if (currentIndex === -1) {
           return;
         }
         const merged = [...current];
-        merged[currentIndex] = updated;
+        merged[currentIndex] = {
+          ...updated,
+          userVote
+        };
         this.items.set(merged);
       },
-      error: () => {
+      error: (error) => {
         this.items.set(snapshot);
+        const message = error instanceof Error ? error.message : 'No se pudo registrar el voto';
+        this.snackBar.open(message, 'Cerrar', { duration: 3000 });
       }
     });
   }
@@ -165,7 +182,10 @@ export class ReviewsPage implements OnDestroy {
       distinctUntilChanged()
     );
     const tag$ = this.tagCtrl.valueChanges.pipe(startWith(this.tagCtrl.value), distinctUntilChanged());
-    const game$ = this.gameCtrl.valueChanges.pipe(startWith(this.gameCtrl.value), distinctUntilChanged());
+    const game$ = this.gameCtrl.valueChanges.pipe(
+      startWith(this.gameCtrl.value),
+      distinctUntilChanged()
+    );
 
     combineLatest([search$, tag$, game$, sort$])
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -209,9 +229,11 @@ export class ReviewsPage implements OnDestroy {
           this.setupObserver(this.sentinel.nativeElement);
         }
       },
-      error: () => {
+      error: (error) => {
         this.loading.set(false);
         this.loadingMore.set(false);
+        const message = error instanceof Error ? error.message : 'No se pudieron cargar las reseñas';
+        this.snackBar.open(message, 'Cerrar', { duration: 3000 });
       }
     });
   }

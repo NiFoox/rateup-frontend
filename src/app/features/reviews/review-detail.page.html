@@ -1,0 +1,88 @@
+<section class="detail-page" aria-live="polite">
+  <a mat-button routerLink="/reviews" class="back-link" aria-label="Volver al listado de reseñas">
+    <mat-icon>arrow_back</mat-icon>
+    Volver a reseñas
+  </a>
+
+  @if (loading()) {
+    <div class="loading">
+      <mat-progress-spinner mode="indeterminate" diameter="48"></mat-progress-spinner>
+      <p>Cargando reseña…</p>
+    </div>
+  } @else if (review(); as review) {
+    <mat-card class="review-card">
+      <div class="card-layout">
+        <div class="vote-column">
+          <button
+            mat-icon-button
+            type="button"
+            class="vote-button"
+            [class.active]="review.userVote === 1"
+            [disabled]="loadingVote()"
+            [attr.aria-pressed]="review.userVote === 1"
+            (click)="vote(1)"
+            aria-label="Votar positivo"
+            matTooltip="Votar positivo"
+          >
+            <mat-icon>arrow_upward</mat-icon>
+          </button>
+          <span class="score" aria-live="polite">{{ review.votes }}</span>
+          <button
+            mat-icon-button
+            type="button"
+            class="vote-button"
+            [class.active]="review.userVote === -1"
+            [disabled]="loadingVote()"
+            [attr.aria-pressed]="review.userVote === -1"
+            (click)="vote(-1)"
+            aria-label="Votar negativo"
+            matTooltip="Votar negativo"
+          >
+            <mat-icon>arrow_downward</mat-icon>
+          </button>
+        </div>
+
+        <div class="content">
+          <header class="header">
+            <div class="title-row">
+              <h1 class="title">{{ review.title }}</h1>
+              <span class="rating" [attr.aria-label]="'Calificación ' + review.rating + ' sobre 10'">
+                <mat-icon>star</mat-icon>
+                {{ review.rating }}/10
+              </span>
+            </div>
+            <p class="meta">
+              <span class="game">{{ review.game }}</span>
+              <span class="separator" aria-hidden="true">•</span>
+              <span class="author">por {{ review.authorName }}</span>
+              <span class="separator" aria-hidden="true">•</span>
+              <span class="date">{{ relative(review.createdAt) }}</span>
+              @if (review.updatedAt) {
+                <span class="separator" aria-hidden="true">•</span>
+                <span class="updated">actualizado {{ relative(review.updatedAt) }}</span>
+              }
+            </p>
+          </header>
+
+          <mat-chip-set aria-label="Etiquetas" class="tags">
+            @for (tag of review.tags; track tag) {
+              <mat-chip>{{ tag }}</mat-chip>
+            }
+          </mat-chip-set>
+
+          <mat-divider></mat-divider>
+
+          <div class="body">{{ review.body }}</div>
+        </div>
+      </div>
+    </mat-card>
+
+    <section class="comments" aria-label="Sección de comentarios">
+      <header class="comments-header">
+        <h2>Comentarios ({{ review.comments }})</h2>
+      </header>
+      <app-comment-form [reviewId]="review.id" (created)="onCommentCreated($event)"></app-comment-form>
+      <app-comment-list [reviewId]="review.id" (removed)="onCommentRemoved()"></app-comment-list>
+    </section>
+  }
+</section>
