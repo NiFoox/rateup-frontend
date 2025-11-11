@@ -21,6 +21,8 @@ interface StorageLike {
 
 type VoteMap = Record<string, VoteValue>;
 
+const DEBUG = false;
+
 const REVIEWS_STORAGE_KEY = 'app.reviews';
 const VOTES_STORAGE_PREFIX = 'app.reviewVotes.';
 const COMMENTS_STORAGE_PREFIX = 'app.comments.';
@@ -66,7 +68,7 @@ const generateId = (): string => {
 
 @Injectable({ providedIn: 'root' })
 export class ReviewsService {
-  private readonly storage = resolveStorage();
+  private storage: StorageLike | null = resolveStorage();
   private reviews: Review[] = [];
   private memoryVotes = new Map<string, VoteMap>();
   private memoryComments = new Map<string, Comment[]>();
@@ -163,7 +165,7 @@ export class ReviewsService {
     const normalizedSize = normalizePageSize(pageSize);
 
     return defer(() => {
-      const comments = this.loadComments(reviewId);
+      const comments = this.readComments(reviewId);
       const sorted = [...comments].sort(
         (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)
       );
@@ -212,17 +214,11 @@ export class ReviewsService {
         createdAt: now
       };
 
-      const comments = [comment, ...this.loadComments(reviewId)];
-      this.persistComments(reviewId, comments);
+      const comments = [comment, ...this.readComments(reviewId)];
+      this.writeComments(reviewId, comments);
+      this.updateReviewCommentsCount(reviewId, 1);
 
-      const review = this.reviews[reviewIndex];
-      const updatedReview: Review = {
-        ...review,
-        comments: review.comments + 1
-      };
-      this.reviews = [...this.reviews];
-      this.reviews[reviewIndex] = updatedReview;
-      this.persistReviews();
+      this.logDebug('Comment added', { reviewId, commentId: comment.id });
 
       return of(cloneComment(comment));
     }).pipe(delay(this.randomDelay()));
@@ -243,7 +239,7 @@ export class ReviewsService {
         throw new Error('El comentario es demasiado corto');
       }
 
-      const comments = this.loadComments(reviewId);
+      const comments = this.readComments(reviewId);
       const index = comments.findIndex((comment) => comment.id === commentId);
       if (index === -1) {
         throw new Error('Comentario no encontrado');
@@ -262,7 +258,9 @@ export class ReviewsService {
 
       const nextComments = [...comments];
       nextComments[index] = updated;
-      this.persistComments(reviewId, nextComments);
+      this.writeComments(reviewId, nextComments);
+
+      this.logDebug('Comment edited', { reviewId, commentId });
 
       return of(cloneComment(updated));
     }).pipe(delay(this.randomDelay()));
@@ -274,7 +272,7 @@ export class ReviewsService {
         throw new Error('Usuario no autenticado');
       }
 
-      const comments = this.loadComments(reviewId);
+      const comments = this.readComments(reviewId);
       const index = comments.findIndex((comment) => comment.id === commentId);
       if (index === -1) {
         throw new Error('Comentario no encontrado');
@@ -289,22 +287,35 @@ export class ReviewsService {
 
       const nextComments = [...comments];
       nextComments.splice(index, 1);
-      this.persistComments(reviewId, nextComments);
+      this.writeComments(reviewId, nextComments);
+      this.updateReviewCommentsCount(reviewId, -1);
 
-      const reviewIndex = this.reviews.findIndex((item) => item.id === reviewId);
-      if (reviewIndex !== -1) {
-        const review = this.reviews[reviewIndex];
-        const updated: Review = {
-          ...review,
-          comments: Math.max(0, review.comments - 1)
-        };
-        this.reviews = [...this.reviews];
-        this.reviews[reviewIndex] = updated;
-        this.persistReviews();
-      }
+      this.logDebug('Comment deleted', { reviewId, commentId });
 
       return of(void 0);
     }).pipe(delay(this.randomDelay()));
+  }
+
+  syncCommentCount(reviewId: string, total: number): void {
+    const index = this.reviews.findIndex((item) => item.id === reviewId);
+    if (index === -1) {
+      return;
+    }
+
+    const normalized = Number.isFinite(total) ? Math.max(0, Math.floor(total)) : 0;
+    const target = this.reviews[index];
+    if (target.comments === normalized) {
+      return;
+    }
+
+    this.reviews = [...this.reviews];
+    this.reviews[index] = {
+      ...target,
+      comments: normalized
+    };
+    this.persistReviews();
+
+    this.logDebug('Comment count synced', { reviewId, total: normalized });
   }
 
   getAvailableFilters(): { tags: string[]; games: string[] } {
@@ -397,8 +408,22 @@ export class ReviewsService {
     return 300 + Math.floor(Math.random() * 401);
   }
 
+  private getStorage(): StorageLike | null {
+    if (this.storage) {
+      return this.storage;
+    }
+
+    const resolved = resolveStorage();
+    if (resolved) {
+      this.storage = resolved;
+      this.logDebug('Storage resolved');
+    }
+
+    return this.storage;
+  }
+
   private loadReviews(): Review[] {
-    const storage = this.storage;
+    const storage = this.getStorage();
     if (!storage) {
       return REVIEWS_SEED.map(cloneReview);
     }
@@ -423,7 +448,7 @@ export class ReviewsService {
   }
 
   private persistReviews(): void {
-    const storage = this.storage;
+    const storage = this.getStorage();
     if (!storage) {
       return;
     }
@@ -436,7 +461,7 @@ export class ReviewsService {
       return {};
     }
 
-    const storage = this.storage;
+    const storage = this.getStorage();
     if (!storage) {
       return this.memoryVotes.get(userId) ?? {};
     }
@@ -468,7 +493,7 @@ export class ReviewsService {
       return;
     }
 
-    const storage = this.storage;
+    const storage = this.getStorage();
     if (!storage) {
       if (Object.keys(voteMap).length === 0) {
         this.memoryVotes.delete(userId);
@@ -487,54 +512,93 @@ export class ReviewsService {
     storage.setItem(key, JSON.stringify(voteMap));
   }
 
-  private loadComments(reviewId: string): Comment[] {
+  private logDebug(message: string, context?: Record<string, unknown>): void {
+    if (DEBUG) {
+      const payload = context ? JSON.stringify(context) : '';
+      const suffix = payload ? ` ${payload}` : '';
+      console.debug(`[ReviewsService] ${message}${suffix}`);
+    }
+  }
+
+  private readComments(reviewId: string): Comment[] {
     if (!reviewId) {
       return [];
     }
 
-    const storage = this.storage;
+    const storage = this.getStorage();
     if (!storage) {
-      return this.memoryComments.get(reviewId)?.map(cloneComment) ?? [];
+      const fallback = this.memoryComments.get(reviewId)?.map(cloneComment) ?? [];
+      this.logDebug('Read comments (memory)', { reviewId, count: fallback.length });
+      return fallback;
     }
 
     const raw = storage.getItem(`${COMMENTS_STORAGE_PREFIX}${reviewId}`);
     if (!raw) {
+      this.logDebug('Read comments (storage miss)', { reviewId, count: 0 });
       return [];
     }
 
     try {
       const parsed = JSON.parse(raw) as Comment[];
       if (Array.isArray(parsed)) {
-        return parsed.map(cloneComment);
+        const mapped = parsed.map(cloneComment);
+        this.logDebug('Read comments (storage)', { reviewId, count: mapped.length });
+        return mapped;
       }
     } catch {
       // Ignore malformed data.
     }
 
+    this.logDebug('Read comments (storage invalid)', { reviewId, count: 0 });
     return [];
   }
 
-  private persistComments(reviewId: string, comments: Comment[]): void {
+  private writeComments(reviewId: string, comments: Comment[]): void {
     if (!reviewId) {
       return;
     }
 
-    const storage = this.storage;
+    const storage = this.getStorage();
     if (!storage) {
       if (comments.length === 0) {
         this.memoryComments.delete(reviewId);
       } else {
         this.memoryComments.set(reviewId, comments.map(cloneComment));
       }
+      this.logDebug('Write comments (memory)', { reviewId, count: comments.length });
       return;
     }
 
     const key = `${COMMENTS_STORAGE_PREFIX}${reviewId}`;
     if (comments.length === 0) {
       storage.removeItem(key);
+      this.logDebug('Write comments (storage remove)', { reviewId, count: 0 });
       return;
     }
 
     storage.setItem(key, JSON.stringify(comments));
+    this.logDebug('Write comments (storage)', { reviewId, count: comments.length });
+  }
+
+  private updateReviewCommentsCount(reviewId: string, delta: number): void {
+    const index = this.reviews.findIndex((item) => item.id === reviewId);
+    if (index === -1) {
+      return;
+    }
+
+    const target = this.reviews[index];
+    const nextTotal = Math.max(0, target.comments + delta);
+    if (nextTotal === target.comments) {
+      return;
+    }
+
+    this.reviews = [...this.reviews];
+    this.reviews[index] = {
+      ...target,
+      comments: nextTotal
+    };
+    this.persistReviews();
+
+    this.logDebug('Review comments count updated', { reviewId, delta, total: nextTotal });
   }
 }
