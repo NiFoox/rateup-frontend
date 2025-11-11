@@ -5,7 +5,7 @@
       <span>Cargando comentarios…</span>
     </div>
   } @else if (comments().length === 0) {
-    <p class="empty" role="status">No hay comentarios todavía. Sé el primero en participar.</p>
+    <p class="empty" role="status">Sé el primero en comentar.</p>
   } @else {
     @for (comment of comments(); track comment.id; let index = $index) {
       <article class="comment" role="listitem">
@@ -23,7 +23,7 @@
                 <span class="edited" matTooltip="Editado">editado</span>
               }
             </div>
-            @if (isOwner(comment)) {
+            @if (canEdit(comment) || canDelete(comment)) {
               <div class="actions">
                 @if (editingId() === comment.id) {
                   <button
@@ -41,26 +41,30 @@
                     Cancelar
                   </button>
                 } @else {
-                  <button
-                    mat-icon-button
-                    type="button"
-                    (click)="startEdit(comment)"
-                    matTooltip="Editar comentario"
-                    aria-label="Editar comentario"
-                  >
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button
-                    mat-icon-button
-                    type="button"
-                    color="warn"
-                    (click)="deleteComment(comment)"
-                    [disabled]="deletingId() === comment.id"
-                    matTooltip="Eliminar comentario"
-                    aria-label="Eliminar comentario"
-                  >
-                    <mat-icon>delete</mat-icon>
-                  </button>
+                  @if (canEdit(comment)) {
+                    <button
+                      mat-icon-button
+                      type="button"
+                      (click)="startEdit(comment)"
+                      matTooltip="Editar comentario"
+                      aria-label="Editar comentario"
+                    >
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                  }
+                  @if (canDelete(comment)) {
+                    <button
+                      mat-icon-button
+                      type="button"
+                      color="warn"
+                      (click)="deleteComment(comment)"
+                      [disabled]="deletingId() === comment.id"
+                      matTooltip="Eliminar comentario"
+                      aria-label="Eliminar comentario"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  }
                 }
               </div>
             }
