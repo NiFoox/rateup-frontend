@@ -1,3 +1,34 @@
-<mat-card appearance="outlined">
-  <mat-card-title>Juegos</mat-card-title>
-</mat-card>
+<div class="games-page">
+  <div class="games-header">
+    <h1>Juegos</h1>
+    <p>Listado registrado en el sistema</p>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Género</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let game of games">
+          <td class="game-name">
+            <span class="name">{{ game.title }}</span>
+          </td>
+
+          <td>{{ game.description }}</td>
+          <td>{{ game.genre }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="empty-state" *ngIf="games.length === 0">
+      <mat-icon>sports_esports</mat-icon>
+      No hay juegos cargados
+    </div>
+  </div>
+</div>
