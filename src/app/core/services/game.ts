@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 export interface Game {
   id?: number;
@@ -10,14 +11,22 @@ export interface Game {
 
 @Injectable({ providedIn: 'root' })
 export class GameService {
-  private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:3000'; // o env
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = 'http://localhost:3000';
 
-  list() {
-    return this.http.get<Game[]>(`${this.baseUrl}/games`); // GET /games
+  list(): Observable<Game[]> {
+    return this.http.get<Game[]>(`${this.baseUrl}/games`);
   }
 
-  create(game: Omit<Game, 'id'>) {
-    return this.http.post(`${this.baseUrl}/games`, game);  // POST /games
+  create(game: Omit<Game, 'id'>): Observable<Game> {
+    return this.http.post<Game>(`${this.baseUrl}/games`, game);
+  }
+
+  getById(id: number): Observable<Game> {
+    return this.http.get<Game>(`${this.baseUrl}/games/${id}`);
+  }
+
+  update(id: number, body: Partial<Omit<Game, 'id'>>): Observable<Game> {
+    return this.http.put<Game>(`${this.baseUrl}/games/${id}`, body);
   }
 }

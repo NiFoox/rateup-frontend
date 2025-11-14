@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-toolbar',
@@ -11,4 +11,11 @@ import { RouterModule } from '@angular/router';
   templateUrl: './app-toolbar.html',
   styleUrls: ['./app-toolbar.scss'],
 })
-export class AppToolbar {}
+export class AppToolbar {
+  title = 'RateUp';
+  private router = inject(Router);
+
+  goHome() {
+    this.router.navigate(['/']);
+  }
+}

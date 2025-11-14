@@ -1,0 +1,23 @@
+.game-form {
+  display: grid;
+  gap: 24px;
+}
+
+.game-form__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 600px) {
+  .game-form {
+    gap: 16px;
+  }
+
+  .game-form__actions {
+    justify-content: stretch;
+  }
+
+  .game-form__actions button {
+    width: 100%;
+  }
+}

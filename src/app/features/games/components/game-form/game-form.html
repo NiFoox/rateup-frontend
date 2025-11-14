@@ -1,1 +1,29 @@
-<p>game-form works!</p>
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="game-form">
+  <mat-form-field appearance="outline">
+    <mat-label>Nombre</mat-label>
+    <input matInput formControlName="name" required />
+    <mat-error *ngIf="form.controls.name.hasError('required')">
+      El nombre es obligatorio
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Género</mat-label>
+    <input matInput formControlName="genre" required />
+    <mat-error *ngIf="form.controls.genre.hasError('required')">
+      El género es obligatorio
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Descripción</mat-label>
+    <textarea matInput rows="5" formControlName="description" required></textarea>
+    <mat-error *ngIf="form.controls.description.hasError('required')">
+      La descripción es obligatoria
+    </mat-error>
+  </mat-form-field>
+
+  <div class="game-form__actions">
+    <button mat-raised-button color="primary" type="submit">Guardar</button>
+  </div>
+</form>
