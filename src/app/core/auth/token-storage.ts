@@ -1,62 +1,35 @@
-export interface StoredUser {
-  id: string;
-  name: string;
-  roles?: string[];
-}
+import { AuthUser } from './auth.models';
 
-interface StorageLike {
-  getItem(key: string): string | null;
-  setItem(key: string, value: string): void;
-}
+const USER_KEY = 'auth_user';
 
-const DEFAULT_USER: StoredUser = {
-  id: 'demo-user',
-  name: 'Demo User',
-  roles: ['player']
-};
-
-const USER_KEY = 'app.currentUser';
-
-const resolveStorage = (): StorageLike | null => {
-  try {
-    if (typeof globalThis.localStorage !== 'undefined') {
-      return globalThis.localStorage;
-    }
-  } catch {
-    // Ignore errors that may occur when localStorage is not available.
+const getStorageValue = (key: string): string | null => {
+  if (typeof window === 'undefined') {
+    return null;
   }
-  return null;
+
+  return window.localStorage.getItem(key) ?? window.sessionStorage.getItem(key);
 };
 
 export class TokenStorage {
-  private static storage = resolveStorage();
+  static getUser(): AuthUser | null {
+    const raw = getStorageValue(USER_KEY);
 
-  static getUser(): StoredUser {
-    const storage = this.storage;
-    if (!storage) {
-      return DEFAULT_USER;
-    }
-
-    const raw = storage.getItem(USER_KEY);
     if (!raw) {
-      storage.setItem(USER_KEY, JSON.stringify(DEFAULT_USER));
-      return DEFAULT_USER;
+      return null;
     }
 
     try {
-      const parsed = JSON.parse(raw) as StoredUser;
+      const parsed = JSON.parse(raw) as AuthUser;
       if (parsed && typeof parsed.id === 'string' && typeof parsed.name === 'string') {
         return {
-          id: parsed.id,
-          name: parsed.name,
-          roles: parsed.roles ?? DEFAULT_USER.roles
-        };
+          ...parsed,
+          roles: Array.isArray(parsed.roles) ? [...parsed.roles] : []
+        } satisfies AuthUser;
       }
     } catch {
-      // Ignore invalid payloads and fall back to the default user.
+      // Ignore malformed payloads and treat the session as unauthenticated.
     }
 
-    storage.setItem(USER_KEY, JSON.stringify(DEFAULT_USER));
-    return DEFAULT_USER;
+    return null;
   }
 }

@@ -223,6 +223,9 @@ export class ReviewsPage implements OnDestroy {
         this.hasMore.set(hasMore);
         this.loading.set(false);
         this.loadingMore.set(false);
+        const filters = this.reviewsService.getAvailableFilters();
+        this.tags.set(filters.tags);
+        this.games.set(filters.games);
         if (!hasMore) {
           this.observer?.disconnect();
         } else if (this.sentinel?.nativeElement) {
