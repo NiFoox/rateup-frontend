@@ -1,0 +1,610 @@
+openapi: 3.1.0
+info:
+  title: RateUp Frontend Expected API
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+paths:
+  /api/auth/login:
+    post:
+      operationId: authLogin
+      summary: Autenticar usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Tokens y usuario autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+  /api/auth/logout:
+    post:
+      operationId: authLogout
+      summary: Cerrar sesión activa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '204':
+          description: Sesión invalidada
+  /api/auth/me:
+    get:
+      operationId: authMe
+      summary: Obtener usuario autenticado
+      responses:
+        '200':
+          description: Usuario actual
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/AuthUser'
+                required:
+                  - user
+  /api/users:
+    get:
+      operationId: listUsers
+      summary: Listar usuarios
+      parameters:
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: sort
+          schema:
+            type: string
+        - in: query
+          name: dir
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: role
+          schema:
+            type: string
+        - in: query
+          name: active
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Usuarios paginados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedResult_User'
+    post:
+      operationId: createUser
+      summary: Crear usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreatePayload'
+      responses:
+        '201':
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /api/users/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getUser
+      summary: Obtener usuario por id
+      responses:
+        '200':
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      operationId: updateUser
+      summary: Actualizar usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdatePayload'
+      responses:
+        '200':
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      operationId: deleteUser
+      summary: Eliminar usuario
+      responses:
+        '204':
+          description: Usuario eliminado
+  /api/users/{id}/status:
+    patch:
+      operationId: updateUserStatus
+      summary: Cambiar estado activo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusUpdatePayload'
+      responses:
+        '200':
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /api/reviews:
+    get:
+      operationId: listReviews
+      summary: Listar reseñas
+      parameters:
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: tag
+          schema:
+            type: string
+        - in: query
+          name: game
+          schema:
+            type: string
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [hot, new, top]
+      responses:
+        '200':
+          description: Reseñas paginadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedResult_ReviewWithUserVote'
+  /api/reviews/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getReview
+      summary: Obtener reseña
+      responses:
+        '200':
+          description: Reseña con voto del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewWithUserVote'
+  /api/reviews/{reviewId}/votes:
+    post:
+      operationId: voteReview
+      summary: Votar reseña
+      parameters:
+        - in: path
+          name: reviewId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoteRequest'
+      responses:
+        '200':
+          description: Resultado del voto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoteResult'
+  /api/reviews/{reviewId}/comments:
+    parameters:
+      - in: path
+        name: reviewId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listComments
+      summary: Listar comentarios
+      parameters:
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Comentarios paginados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedResult_Comment'
+    post:
+      operationId: addComment
+      summary: Agregar comentario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentBodyPayload'
+      responses:
+        '201':
+          description: Comentario creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+  /api/reviews/{reviewId}/comments/{commentId}:
+    parameters:
+      - in: path
+        name: reviewId
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: commentId
+        required: true
+        schema:
+          type: string
+    patch:
+      operationId: editComment
+      summary: Editar comentario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentBodyPayload'
+      responses:
+        '200':
+          description: Comentario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+    delete:
+      operationId: deleteComment
+      summary: Eliminar comentario
+      responses:
+        '204':
+          description: Comentario eliminado
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        remember:
+          type: boolean
+      required:
+        - email
+        - password
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - name
+        - email
+        - roles
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/AuthUser'
+      required:
+        - accessToken
+        - user
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - roles
+        - active
+        - createdAt
+    UserCreatePayload:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        active:
+          type: boolean
+        password:
+          type: string
+      required:
+        - name
+        - email
+        - roles
+        - active
+    UserUpdatePayload:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        active:
+          type: boolean
+        password:
+          type: string
+    StatusUpdatePayload:
+      type: object
+      properties:
+        active:
+          type: boolean
+      required:
+        - active
+    PagedResult_User:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+      required:
+        - items
+        - total
+        - page
+        - pageSize
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        game:
+          type: string
+        authorId:
+          type: string
+        authorName:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        rating:
+          type: number
+        body:
+          type: string
+        votes:
+          type: integer
+        comments:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - game
+        - authorId
+        - authorName
+        - tags
+        - rating
+        - body
+        - votes
+        - comments
+        - createdAt
+    VoteValue:
+      type: integer
+      enum: [-1, 0, 1]
+    ReviewWithUserVote:
+      allOf:
+        - $ref: '#/components/schemas/Review'
+        - type: object
+          properties:
+            userVote:
+              $ref: '#/components/schemas/VoteValue'
+          required:
+            - userVote
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+        reviewId:
+          type: string
+        authorId:
+          type: string
+        authorName:
+          type: string
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        votes:
+          type: integer
+      required:
+        - id
+        - reviewId
+        - authorId
+        - authorName
+        - body
+        - createdAt
+    PagedResult_ReviewWithUserVote:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewWithUserVote'
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+      required:
+        - items
+        - total
+        - page
+        - pageSize
+    PagedResult_Comment:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+      required:
+        - items
+        - total
+        - page
+        - pageSize
+    VoteRequest:
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/VoteValue'
+      required:
+        - value
+    VoteResult:
+      type: object
+      properties:
+        review:
+          $ref: '#/components/schemas/Review'
+        userVote:
+          $ref: '#/components/schemas/VoteValue'
+      required:
+        - review
+        - userVote
+    CommentBodyPayload:
+      type: object
+      properties:
+        body:
+          type: string
+      required:
+        - body
