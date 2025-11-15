@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 
 import { AuthUser } from './auth.models';
+import { DEBUG } from '../debug';
 
 const ACCESS_TOKEN_KEY = 'auth_access_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
@@ -38,6 +39,14 @@ export class TokenStorageService {
     secondaryStorage.removeItem(ACCESS_TOKEN_KEY);
     secondaryStorage.removeItem(REFRESH_TOKEN_KEY);
     secondaryStorage.removeItem(USER_KEY);
+
+    DEBUG &&
+      console.debug('[TOKEN] setTokens', {
+        remember,
+        accessTokenLength: accessToken.length,
+        hasRefreshToken: !!refreshToken,
+        primary: remember ? 'localStorage' : 'sessionStorage'
+      });
   }
 
   setUser(user: AuthUser): void {
@@ -99,23 +108,26 @@ export class TokenStorageService {
     const token = this.getAccessToken();
 
     if (!token) {
+      DEBUG && console.debug('[TOKEN] isAuthenticated', { hasToken: false, isValid: false });
       return false;
     }
 
     const payload = this.decodePayload(token);
 
-    if (!payload) {
-      this.clear();
-      return false;
+    if (payload && typeof payload.exp === 'number') {
+      const expiresAt = payload.exp * 1000;
+      const isValid = Date.now() < expiresAt;
+      DEBUG &&
+        console.debug('[TOKEN] isAuthenticated', {
+          hasToken: true,
+          exp: payload.exp,
+          expiresAt,
+          isValid
+        });
+      return isValid;
     }
 
-    const expiresAt = payload.exp * 1000;
-
-    if (Number.isNaN(expiresAt) || expiresAt <= Date.now()) {
-      this.clear();
-      return false;
-    }
-
+    DEBUG && console.debug('[TOKEN] isAuthenticated', { hasToken: true, isValid: true, reason: 'opaque' });
     return true;
   }
 

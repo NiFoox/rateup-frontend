@@ -3,7 +3,6 @@ import {
   Component,
   DestroyRef,
   QueryList,
-  computed,
   inject,
   signal,
   ViewChildren
@@ -11,7 +10,6 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInput, MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -20,10 +18,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map, startWith } from 'rxjs/operators';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { LoginRequest } from '../../../../core/auth/auth.models';
+import { DEBUG } from '../../../../core/debug';
 
 interface MockHttpError extends Error {
   status: number;
@@ -39,7 +36,6 @@ interface MockHttpError extends Error {
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatSnackBarModule,
     MatProgressSpinnerModule,
     MatCheckboxModule,
   ],
@@ -50,7 +46,6 @@ interface MockHttpError extends Error {
 export class LoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
-  private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -61,50 +56,48 @@ export class LoginComponent {
     password: ['', [Validators.required, Validators.minLength(8)]],
     rememberMe: [false],
   });
-  readonly formValid = toSignal(
-    this.form.statusChanges.pipe(
-      map(() => this.form.valid),
-      startWith(this.form.valid)
-    ),
-    { initialValue: this.form.valid }
-  );
-
-  readonly isSubmitDisabled = computed(() => this.isLoading() || !this.formValid());
-
   readonly isLoading = signal(false);
+  readonly errorMsg = signal<string | undefined>(undefined);
   readonly isPasswordHidden = signal(true);
 
   submit(): void {
-    if (this.form.invalid) {
+    if (this.form.invalid || this.isLoading()) {
       this.form.markAllAsTouched();
       this.focusFirstInvalidControl();
       return;
     }
 
     const { email, password, rememberMe } = this.form.getRawValue();
-    const payload: LoginRequest = { email, password, remember: rememberMe };
+    const payload: LoginRequest = { email, password, remember: !!rememberMe };
+    DEBUG &&
+      console.debug('[LOGIN] submit', {
+        valid: this.form.valid,
+        email,
+        rememberMe: !!rememberMe
+      });
 
     this.isLoading.set(true);
-    this.authService
+    this.errorMsg.set(undefined);
+
+    const login$ = this.authService
       .login(payload)
       .pipe(
         finalize(() => this.isLoading.set(false)),
         takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe({
+      );
+
+    DEBUG && console.debug('[LOGIN] subscribe login observable');
+
+    login$.subscribe({
         next: () => {
-          this.snackBar.open('Bienvenido nuevamente 👋', 'Cerrar', {
-            duration: 3000,
-            verticalPosition: 'top',
-          });
-          void this.router.navigateByUrl('/home');
+          DEBUG && console.debug('[LOGIN] success → navigate /home');
+          this.errorMsg.set(undefined);
+          void this.router.navigateByUrl('/home', { replaceUrl: true });
         },
         error: (error: unknown) => {
+          DEBUG && console.debug('[LOGIN] error', error);
           const message = this.resolveErrorMessage(error as MockHttpError);
-          this.snackBar.open(message, 'Cerrar', {
-            duration: 5000,
-            verticalPosition: 'top',
-          });
+          this.errorMsg.set(message);
         },
       });
   }

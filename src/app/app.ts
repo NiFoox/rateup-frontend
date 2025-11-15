@@ -5,6 +5,7 @@ import { filter, map } from 'rxjs/operators';
 import { AppToolbar } from './shared/components/app-toolbar/app-toolbar';
 import { AuthService } from './core/auth/auth.service';
 import { TokenStorageService } from './core/auth/token-storage.service';
+import { DEBUG } from './core/debug';
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -38,12 +39,16 @@ export class App {
 
     while (route) {
       if (route.snapshot.data?.['hideToolbar'] === true) {
-        return true;
+        const hide = true;
+        DEBUG && console.debug('[APP] toolbar visibility', { url: this.router.url, hideToolbar: hide });
+        return hide;
       }
 
       route = route.firstChild ?? null;
     }
 
-    return false;
+    const hide = false;
+    DEBUG && console.debug('[APP] toolbar visibility', { url: this.router.url, hideToolbar: hide });
+    return hide;
   }
 }
