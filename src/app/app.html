@@ -1,5 +1,7 @@
 <div class="app-shell">
-  <app-app-toolbar></app-app-toolbar>
+  @if (showToolbar()) {
+    <app-app-toolbar></app-app-toolbar>
+  }
   <main class="app-main" role="main">
     <router-outlet></router-outlet>
   </main>

@@ -76,12 +76,18 @@
       Recordarme
     </mat-checkbox>
 
+    @if (errorMsg()) {
+      <div class="login-error" role="alert">
+        {{ errorMsg() }}
+      </div>
+    }
+
     <button
       mat-flat-button
       color="primary"
       class="submit-button"
       type="submit"
-      [disabled]="isSubmitDisabled()"
+      [disabled]="form.invalid || isLoading()"
       aria-label="Ingresar"
     >
       @if (isLoading()) {

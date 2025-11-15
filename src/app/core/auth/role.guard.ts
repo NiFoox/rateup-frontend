@@ -4,6 +4,7 @@ import { ActivatedRouteSnapshot, CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 import { TokenStorageService } from './token-storage.service';
 import { AuthUser } from './auth.models';
+import { DEBUG } from '../debug';
 
 const extractRequiredRoles = (route: ActivatedRouteSnapshot): string[] => {
   const roles = route.data?.['roles'];
@@ -34,26 +35,32 @@ export const roleGuard: CanActivateFn = (route) => {
   const authService = inject(AuthService);
 
   const requiredRoles = extractRequiredRoles(route);
+  const isAuthenticated = tokenStorage.isAuthenticated();
+  DEBUG && console.debug('[GUARD role]', { requiredRoles, isAuthenticated });
 
   if (!requiredRoles.length) {
     return true;
   }
 
-  if (!tokenStorage.isAuthenticated()) {
-    return router.createUrlTree(['/login']);
+  if (!isAuthenticated) {
+    void router.navigateByUrl('/login', { replaceUrl: true });
+    return false;
   }
 
   const currentUser = resolveCurrentUser(tokenStorage, authService);
+  const userRoles = currentUser?.roles ?? [];
+  DEBUG && console.debug('[GUARD role] user roles', { requiredRoles, userRoles });
 
   if (!currentUser) {
-    return router.createUrlTree(['/login']);
+    void router.navigateByUrl('/login', { replaceUrl: true });
+    return false;
   }
 
-  const hasRequiredRole = requiredRoles.some((role) => currentUser.roles.includes(role));
+  const hasRequiredRole = requiredRoles.some((role) => userRoles.includes(role));
 
-  if (hasRequiredRole) {
-    return true;
+  if (!hasRequiredRole) {
+    void router.navigateByUrl('/home', { replaceUrl: true });
   }
 
-  return router.createUrlTree(['/home']);
+  return hasRequiredRole;
 };

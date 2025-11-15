@@ -6,6 +6,7 @@ import { BehaviorSubject, Observable, catchError, finalize, map, of, tap } from 
 import { AuthResponse, AuthUser, LoginRequest } from './auth.models';
 import { TokenStorageService } from './token-storage.service';
 import { environment } from '../../../../environments/environment';
+import { DEBUG } from '../debug';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -22,17 +23,23 @@ export class AuthService {
 
   login(request: LoginRequest): Observable<AuthResponse> {
     const remember = request.remember ?? false;
+    const endpoint = `${this.apiBaseUrl}/api/auth/login`;
+    DEBUG && console.debug('[AUTH] login → POST', { endpoint, remember });
 
-    return this.http
-      .post<AuthResponse>(`${this.apiBaseUrl}/api/auth/login`, request)
-      .pipe(
-        tap((response) => {
-          this.tokenStorage.setTokens(response.accessToken, response.refreshToken, remember);
-          this.tokenStorage.setUser(response.user);
-          this.currentUser$.next(response.user);
-          this.profileLoaded = true;
-        })
-      );
+    return this.http.post<AuthResponse>(endpoint, request).pipe(
+      tap((response) => {
+        DEBUG && console.debug('[AUTH] login response', { hasAccessToken: !!response?.accessToken });
+        if (!response?.accessToken || !response?.user) {
+          throw new Error('INVALID_PAYLOAD');
+        }
+
+        this.tokenStorage.setTokens(response.accessToken, response.refreshToken, remember);
+        this.tokenStorage.setUser(response.user);
+        this.currentUser$.next(response.user);
+        this.profileLoaded = true;
+        DEBUG && console.debug('[AUTH] tokens+user stored', { user: response.user.email });
+      })
+    );
   }
 
   logout(): void {
