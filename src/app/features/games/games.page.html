@@ -11,17 +11,28 @@
           <th>Nombre</th>
           <th>Descripción</th>
           <th>Género</th>
+          <th>Acciones</th>
         </tr>
       </thead>
 
       <tbody>
         <tr *ngFor="let game of games">
           <td class="game-name">
-            <span class="name">{{ game.title }}</span>
+            <span class="name">{{ game.name }}</span>
           </td>
 
           <td>{{ game.description }}</td>
           <td>{{ game.genre }}</td>
+
+          <td class="actions">
+            <button mat-icon-button (click)="openEditDialog(game)">
+              <mat-icon>edit</mat-icon>
+            </button>
+
+            <button mat-icon-button color="warn" (click)="confirmDelete(game)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -32,3 +43,4 @@
     </div>
   </div>
 </div>
+
