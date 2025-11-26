@@ -1,16 +1,23 @@
 export interface Review {
   id: string;
-  title: string;
-  game: string;
-  authorId: string;
-  authorName: string;
-  tags: string[];
-  rating: number;
-  body: string;
+  gameId: string;
+  userId: string;
+  content: string;
+  score: number;
   votes: number;
   comments: number;
   createdAt: string;
   updatedAt?: string;
+  game?: {
+    id: string;
+    name: string;
+    genre?: string;
+  };
+  user?: {
+    id: string;
+    username: string;
+    email?: string;
+  };
 }
 
 export type VoteValue = -1 | 0 | 1;
@@ -27,7 +34,7 @@ export interface Comment {
   reviewId: string;
   authorId: string;
   authorName: string;
-  body: string;
+  content: string;
   createdAt: string;
   updatedAt?: string;
   votes?: number;
@@ -36,6 +43,8 @@ export interface Comment {
 export interface ReviewsQuery {
   page: number;
   pageSize: number;
+  gameId?: string;
+  userId?: string;
   search?: string;
   tag?: string;
   game?: string;

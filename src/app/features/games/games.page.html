@@ -1,3 +1,53 @@
-<mat-card appearance="outlined">
-  <mat-card-title>Juegos</mat-card-title>
-</mat-card>
+<div class="games-page">
+  <div class="games-header">
+    <h1>Juegos</h1>
+    <p>Listado registrado en el sistema</p>
+
+    <!-- BOTÓN CREAR JUEGO -->
+    <button mat-raised-button color="primary" (click)="openCreateDialog()">
+      <mat-icon>add</mat-icon>
+      Crear juego
+    </button>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Género</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let game of games">
+          <td class="game-name">
+            <span class="name">{{ game.name }}</span>
+          </td>
+
+          <td>{{ game.description }}</td>
+          <td>{{ game.genre }}</td>
+
+          <td class="actions">
+            <!-- EDITAR -->
+            <button mat-icon-button color="primary" (click)="openEditDialog(game)">
+              <mat-icon>edit</mat-icon>
+            </button>
+
+            <!-- ELIMINAR -->
+            <button mat-icon-button color="warn" (click)="confirmDelete(game)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="empty-state" *ngIf="games.length === 0">
+      <mat-icon>sports_esports</mat-icon>
+      No hay juegos cargados
+    </div>
+  </div>
+</div>

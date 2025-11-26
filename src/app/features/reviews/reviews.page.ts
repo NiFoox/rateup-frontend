@@ -219,7 +219,7 @@ export class ReviewsPage implements OnDestroy {
         const merged = append ? [...this.items(), ...result.items] : result.items;
         this.items.set(merged);
         this.page.set(result.page);
-        const hasMore = result.page * result.pageSize < result.total;
+        const hasMore = result.items.length === result.pageSize;
         this.hasMore.set(hasMore);
         this.loading.set(false);
         this.loadingMore.set(false);

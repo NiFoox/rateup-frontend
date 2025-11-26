@@ -122,7 +122,7 @@ export class CommentListComponent implements OnChanges {
       return;
     }
     this.editingId.set(comment.id);
-    this.editControl.setValue(comment.body);
+    this.editControl.setValue(comment.content);
   }
 
   protected cancelEdit(): void {
@@ -242,7 +242,7 @@ export class CommentListComponent implements OnChanges {
         this.comments.set(nextItems);
         this.page = result.page;
         this.total.set(result.total);
-        const hasMore = result.page * result.pageSize < result.total;
+        const hasMore = result.items.length === result.pageSize;
         this.hasMore.set(hasMore);
         this.loading.set(false);
         this.loadingMore.set(false);

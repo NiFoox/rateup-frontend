@@ -3,26 +3,42 @@ import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, map, tap } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
-import {
-  Comment,
-  PagedResult,
-  Review,
-  ReviewWithUserVote,
-  ReviewsQuery,
-  VoteValue
-} from './reviews.models';
+import { Comment, PagedResult, Review, ReviewWithUserVote, ReviewsQuery, VoteValue } from './reviews.models';
 
 type VoteResponse = { review: ReviewDto; userVote?: VoteValue | null };
 
-type CommentDto = Comment;
+type CommentDto = {
+  id: string;
+  reviewId: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+  updatedAt?: string;
+  user?: { id: string; username: string };
+};
 
-type ReviewDto = Review & { userVote?: VoteValue | null };
+type ReviewDto = {
+  id: string;
+  gameId: string;
+  userId: string;
+  content: string;
+  score: number;
+  createdAt: string;
+  updatedAt?: string;
+  user?: { id: string; username: string; email?: string };
+  game?: { id: string; name: string; genre?: string };
+  votes?: number;
+  comments?: number;
+  userVote?: VoteValue | null;
+};
 
 type PagedResultDto<T> = {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
+  items?: T[];
+  data?: T[];
+  total?: number;
+  count?: number;
+  page?: number;
+  pageSize?: number;
 };
 
 @Injectable({ providedIn: 'root' })
@@ -38,11 +54,9 @@ export class ReviewsService {
     const params = new HttpParams({
       fromObject: {
         page: String(query.page),
-        limit: String(query.pageSize),
-        search: query.search ?? '',
-        tag: query.tag ?? '',
-        game: query.game ?? '',
-        sort: query.sort ?? 'hot'
+        pageSize: String(query.pageSize),
+        gameId: query.gameId ?? '',
+        userId: query.userId ?? '',
       }
     });
 
@@ -78,7 +92,7 @@ export class ReviewsService {
   }
 
   getComments(reviewId: string, page: number, pageSize: number): Observable<PagedResult<Comment>> {
-    const params = new HttpParams({ fromObject: { page: String(page), limit: String(pageSize) } });
+    const params = new HttpParams({ fromObject: { page: String(page), pageSize: String(pageSize) } });
 
     return this.http
       .get<PagedResultDto<CommentDto>>(`${this.apiUrl}/${reviewId}/comments`, { params })
@@ -87,7 +101,7 @@ export class ReviewsService {
 
   addComment(reviewId: string, body: string, _userId?: string, _authorName?: string): Observable<Comment> {
     return this.http
-      .post<CommentDto>(`${this.apiUrl}/${reviewId}/comments`, { body })
+      .post<CommentDto>(`${this.apiUrl}/${reviewId}/comments`, { content: body })
       .pipe(map((dto) => this.mapComment(dto)));
   }
 
@@ -98,7 +112,7 @@ export class ReviewsService {
     _userId?: string
   ): Observable<Comment> {
     return this.http
-      .patch<CommentDto>(`${this.apiUrl}/${reviewId}/comments/${commentId}`, { body })
+      .patch<CommentDto>(`${this.apiUrl}/${reviewId}/comments/${commentId}`, { content: body })
       .pipe(map((dto) => this.mapComment(dto)));
   }
 
@@ -118,31 +132,52 @@ export class ReviewsService {
     };
   }
 
-  private mapPagedResult<TDto, TModel>(
-    dto: PagedResultDto<TDto>,
-    mapItem: (item: TDto) => TModel
-  ): PagedResult<TModel> {
+  private mapPagedResult<TDto, TModel>(dto: PagedResultDto<TDto>, mapItem: (item: TDto) => TModel): PagedResult<TModel> {
+    const items = (dto.items ?? dto.data ?? []).map(mapItem);
+    const total = dto.total ?? dto.count ?? items.length;
+
     return {
-      items: dto.items.map(mapItem),
-      total: dto.total,
-      page: dto.page,
-      pageSize: dto.pageSize
-    };
+      items,
+      total,
+      page: dto.page ?? 1,
+      pageSize: dto.pageSize ?? items.length
+    }
   }
 
   private mapReview(dto: ReviewDto): ReviewWithUserVote {
     return {
-      ...dto,
+      id: String(dto.id),
+      gameId: String(dto.gameId),
+      userId: String(dto.userId),
+      content: dto.content,
+      score: dto.score,
+      votes: dto.votes ?? 0,
+      comments: dto.comments ?? 0,
+      game: dto.game
+        ? {
+            ...dto.game,
+            id: String(dto.game.id)
+          }
+        : undefined,
+      user: dto.user
+        ? {
+            ...dto.user,
+            id: String(dto.user.id)
+          }
+        : undefined,
       createdAt: new Date(dto.createdAt).toISOString(),
       updatedAt: dto.updatedAt ? new Date(dto.updatedAt).toISOString() : undefined,
-      tags: Array.isArray(dto.tags) ? [...dto.tags] : [],
       userVote: this.normalizeVote(dto.userVote)
     };
   }
 
   private mapComment(dto: CommentDto): Comment {
     return {
-      ...dto,
+      id: String(dto.id),
+      reviewId: String(dto.reviewId),
+      authorId: dto.user ? String(dto.user.id) : String(dto.userId),
+      authorName: dto.user?.username ?? 'Usuario ' + dto.userId,
+      content: dto.content,
       createdAt: new Date(dto.createdAt).toISOString(),
       updatedAt: dto.updatedAt ? new Date(dto.updatedAt).toISOString() : undefined
     };
@@ -167,8 +202,13 @@ export class ReviewsService {
     const games = new Set(current.games);
 
     reviews.forEach((review) => {
-      review.tags.forEach((tag) => tags.add(tag));
-      games.add(review.game);
+      if (review.game?.genre) {
+        tags.add(review.game.genre);
+      }
+
+      if (review.game?.name) {
+        games.add(review.game.name);
+      }
     });
 
     const next = {
