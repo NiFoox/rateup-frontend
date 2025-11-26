@@ -55,7 +55,7 @@ export class CommentFormComponent {
 
     const user = TokenStorage.getUser();
     const userId = user?.id ?? '';
-    const authorName = user?.name ?? '';
+    const authorName = user?.username ?? '';
 
     if (!userId || !authorName) {
       this.snackBar.open('Necesitas iniciar sesión para comentar', 'Cerrar', {

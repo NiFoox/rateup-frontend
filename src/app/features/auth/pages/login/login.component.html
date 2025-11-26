@@ -9,23 +9,23 @@
     <h1 class="login-title">Ingresá a tu cuenta</h1>
 
       <mat-form-field appearance="fill">
-        <mat-label>Email</mat-label>
+        <mat-label>Usuario o correo</mat-label>
         <input
-          id="email"
+          id="usernameOrEmail"
           matInput
-          type="email"
-          formControlName="email"
+          type="text"
+          formControlName="usernameOrEmail"
           required
-          autocomplete="email"
+          autocomplete="username"
           aria-required="true"
-          aria-label="Email"
-          [attr.aria-invalid]="(form.get('email')?.invalid && form.get('email')?.touched) ? 'true' : 'false'"
-          [attr.aria-describedby]="(form.get('email')?.invalid && form.get('email')?.touched) ? 'email-errors' : null"
-          placeholder="Email"
+          aria-label="Usuario o correo"
+          [attr.aria-invalid]="(form.get('usernameOrEmail')?.invalid && form.get('usernameOrEmail')?.touched) ? 'true' : 'false'"
+          [attr.aria-describedby]="(form.get('usernameOrEmail')?.invalid && form.get('usernameOrEmail')?.touched) ? 'username-errors' : null"
+          placeholder="Usuario o correo"
         />
-        <mat-icon matSuffix aria-hidden="true">mail</mat-icon>
-        @if (form.get('email')?.touched && form.get('email')?.invalid) {
-          <mat-error id="email-errors">Correo inválido.</mat-error>
+        <mat-icon matSuffix aria-hidden="true">person</mat-icon>
+        @if (form.get('usernameOrEmail')?.touched && form.get('usernameOrEmail')?.invalid) {
+          <mat-error id="username-errors">Ingresa tu usuario o correo.</mat-error>
         }
       </mat-form-field>
       <mat-form-field appearance="fill">

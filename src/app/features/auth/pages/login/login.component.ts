@@ -52,7 +52,7 @@ export class LoginComponent {
   @ViewChildren(MatInput) private readonly inputs!: QueryList<MatInput>;
 
   readonly form = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
+    usernameOrEmail: ['', [Validators.required]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     rememberMe: [false],
   });
@@ -67,12 +67,12 @@ export class LoginComponent {
       return;
     }
 
-    const { email, password, rememberMe } = this.form.getRawValue();
-    const payload: LoginRequest = { email, password, remember: !!rememberMe };
+    const { usernameOrEmail, password, rememberMe } = this.form.getRawValue();
+    const payload: LoginRequest = { usernameOrEmail, password, rememberMe: !!rememberMe };
     DEBUG &&
       console.debug('[LOGIN] submit', {
         valid: this.form.valid,
-        email,
+        usernameOrEmail,
         rememberMe: !!rememberMe
       });
 

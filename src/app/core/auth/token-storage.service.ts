@@ -4,7 +4,6 @@ import { AuthUser } from './auth.models';
 import { DEBUG } from '../debug';
 
 const ACCESS_TOKEN_KEY = 'auth_access_token';
-const REFRESH_TOKEN_KEY = 'auth_refresh_token';
 const USER_KEY = 'auth_user';
 
 interface TokenPayload {
@@ -20,7 +19,7 @@ interface BufferModule {
 
 @Injectable({ providedIn: 'root' })
 export class TokenStorageService {
-  setTokens(accessToken: string, refreshToken?: string, remember = false): void {
+  setTokens(accessToken: string, remember = false): void {
     if (!this.isBrowser()) {
       return;
     }
@@ -30,21 +29,13 @@ export class TokenStorageService {
 
     primaryStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
 
-    if (refreshToken) {
-      primaryStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-    } else {
-      primaryStorage.removeItem(REFRESH_TOKEN_KEY);
-    }
-
     secondaryStorage.removeItem(ACCESS_TOKEN_KEY);
-    secondaryStorage.removeItem(REFRESH_TOKEN_KEY);
     secondaryStorage.removeItem(USER_KEY);
 
     DEBUG &&
       console.debug('[TOKEN] setTokens', {
         remember,
         accessTokenLength: accessToken.length,
-        hasRefreshToken: !!refreshToken,
         primary: remember ? 'localStorage' : 'sessionStorage'
       });
   }
@@ -97,10 +88,8 @@ export class TokenStorageService {
     }
 
     window.localStorage.removeItem(ACCESS_TOKEN_KEY);
-    window.localStorage.removeItem(REFRESH_TOKEN_KEY);
     window.localStorage.removeItem(USER_KEY);
     window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-    window.sessionStorage.removeItem(REFRESH_TOKEN_KEY);
     window.sessionStorage.removeItem(USER_KEY);
   }
 

@@ -20,7 +20,7 @@ export class TokenStorage {
 
     try {
       const parsed = JSON.parse(raw) as AuthUser;
-      if (parsed && typeof parsed.id === 'string' && typeof parsed.name === 'string') {
+      if (parsed && typeof parsed.id === 'number' && typeof parsed.username === 'string') {
         return {
           ...parsed,
           roles: Array.isArray(parsed.roles) ? [...parsed.roles] : []
