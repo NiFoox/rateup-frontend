@@ -23,7 +23,7 @@
       <span>Reseñas</span>
     </button>
 
-    @if (hasRole('editor') || hasRole('admin')) {
+    @if (hasRole('ADMIN')) {
       <button
         mat-button
         routerLink="/games"
@@ -35,7 +35,7 @@
       </button>
     }
 
-    @if (hasRole('admin')) {
+    @if (hasRole('ADMIN')) {
       <button
         mat-button
         routerLink="/users"

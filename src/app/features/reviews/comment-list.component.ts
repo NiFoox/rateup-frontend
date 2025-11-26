@@ -63,7 +63,7 @@ export class CommentListComponent implements OnChanges {
   protected readonly relative = fromNow;
   protected readonly colorFor = avatarColor;
   protected readonly currentUser = TokenStorage.getUser();
-  protected readonly isAdmin = this.currentUser?.roles?.includes('admin') ?? false;
+  protected readonly isAdmin = this.currentUser?.roles?.includes('ADMIN') ?? false;
 
   private readonly reviewsService = inject(ReviewsService);
   private readonly snackBar = inject(MatSnackBar);
@@ -106,7 +106,7 @@ export class CommentListComponent implements OnChanges {
   }
 
   protected isOwner(comment: Comment): boolean {
-    return !!comment && comment.authorId === this.currentUser?.id;
+    return !!comment && comment.authorId === String(this.currentUser?.id);
   }
 
   protected canEdit(comment: Comment): boolean {
@@ -136,7 +136,7 @@ export class CommentListComponent implements OnChanges {
     if (!this.canEdit(comment) || this.editControl.invalid || this.savingEdit()) {
       return;
     }
-    const userId = this.currentUser?.id ?? '';
+    const userId = String(this.currentUser?.id ?? '');
     if (!userId) {
       this.snackBar.open('Necesitas iniciar sesión para editar', 'Cerrar', {
         duration: 3000,
@@ -179,7 +179,7 @@ export class CommentListComponent implements OnChanges {
     if (this.deletingId() || !this.reviewId || !this.canDelete(comment)) {
       return;
     }
-    const userId = this.currentUser?.id ?? '';
+    const userId = String(this.currentUser?.id ?? '');
     if (!userId) {
       this.snackBar.open('Necesitas iniciar sesión para eliminar', 'Cerrar', {
         duration: 3000,

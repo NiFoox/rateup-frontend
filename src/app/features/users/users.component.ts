@@ -71,17 +71,17 @@ export class UsersComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly displayedColumns: Array<keyof User | 'actions'> = [
-    'name',
+    'username',
     'email',
     'roles',
-    'active',
+    'isActive',
     'createdAt',
     'actions'
   ];
 
   readonly dataSource = new MatTableDataSource<User>([]);
   readonly total = signal(0);
-  readonly pageIndex = signal(0);
+  readonly pageIndex = signal(1);
   readonly pageSize = signal(10);
   readonly isLoading = signal(false);
   readonly isMutating = signal(false);
@@ -178,7 +178,7 @@ export class UsersComponent implements OnInit {
       width: '360px',
       data: {
         title: 'Eliminar usuario',
-        message: `¿Deseas eliminar a ${user.name}? Esta acción no se puede deshacer.`
+        message: `¿Deseas eliminar a ${user.username}? Esta acción no se puede deshacer.`
       }
     });
 
@@ -243,7 +243,7 @@ export class UsersComponent implements OnInit {
       )
       .subscribe({
         next: (result) => {
-          this.dataSource.data = result.items;
+          this.dataSource.data = result.data;
           this.total.set(result.total);
           this.pageIndex.set(result.page);
           this.pageSize.set(result.pageSize);

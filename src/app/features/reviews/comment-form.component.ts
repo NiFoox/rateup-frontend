@@ -55,7 +55,7 @@ export class CommentFormComponent {
 
     const user = TokenStorage.getUser();
     const userId = user?.id ?? '';
-    const authorName = user?.name ?? '';
+    const authorName = user?.username ?? '';
 
     if (!userId || !authorName) {
       this.snackBar.open('Necesitas iniciar sesión para comentar', 'Cerrar', {
@@ -75,7 +75,7 @@ export class CommentFormComponent {
     }
 
     this.submitting.set(true);
-    this.reviewsService.addComment(this.reviewId, value, userId, authorName).subscribe({
+    this.reviewsService.addComment(this.reviewId, value, authorName).subscribe({
       next: (comment) => {
         this.created.emit(comment);
         this.control.setValue('');

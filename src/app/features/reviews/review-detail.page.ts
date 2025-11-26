@@ -130,7 +130,7 @@ export class ReviewDetailPage {
     this.review.set(optimistic);
     this.loadingVote.set(true);
 
-    this.reviewsService.vote(current.id, direction, user.id).subscribe({
+    this.reviewsService.vote(current.id, direction).subscribe({
       next: ({ review: updated, userVote }) => {
         this.review.set({ ...updated, userVote });
         this.loadingVote.set(false);

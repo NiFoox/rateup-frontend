@@ -144,7 +144,7 @@ export class ReviewsPage implements OnDestroy {
     optimisticItems[index] = optimistic;
     this.items.set(optimisticItems);
 
-    this.reviewsService.vote(review.id, direction, user.id).subscribe({
+    this.reviewsService.vote(review.id, direction).subscribe({
       next: ({ review: updated, userVote }) => {
         const current = this.items();
         const currentIndex = current.findIndex((item) => item.id === updated.id);

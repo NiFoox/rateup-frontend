@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, finalize, map, of, tap } from 'rxjs';
 
-import { AuthResponse, AuthUser, LoginRequest } from './auth.models';
+import { AuthResponse, AuthUser, LoginRequest, PrivateUserProfile } from './auth.models';
 import { TokenStorageService } from './token-storage.service';
 import { environment } from '../../../../environments/environment';
 import { DEBUG } from '../debug';
@@ -22,7 +22,7 @@ export class AuthService {
   );
 
   login(request: LoginRequest): Observable<AuthResponse> {
-    const remember = request.remember ?? false;
+    const remember = request.rememberMe ?? false;
     const endpoint = `${this.apiBaseUrl}/api/auth/login`;
     DEBUG && console.debug('[AUTH] login → POST', { endpoint, remember });
 
@@ -33,7 +33,7 @@ export class AuthService {
           throw new Error('INVALID_PAYLOAD');
         }
 
-        this.tokenStorage.setTokens(response.accessToken, response.refreshToken, remember);
+        this.tokenStorage.setTokens(response.accessToken, remember);
         this.tokenStorage.setUser(response.user);
         this.currentUser$.next(response.user);
         this.profileLoaded = true;
@@ -43,28 +43,18 @@ export class AuthService {
   }
 
   logout(): void {
-    const endpoint = `${this.apiBaseUrl}/api/auth/logout`;
-    this.http
-      .post<void>(endpoint, {})
-      .pipe(
-        catchError(() => of(void 0)),
-        finalize(() => {
-          this.profileLoaded = false;
-          this.tokenStorage.clear();
-          this.currentUser$.next(null);
-          void this.router.navigateByUrl('/login');
-        })
-      )
-      .subscribe();
+    this.profileLoaded = false;
+    this.tokenStorage.clear();
+    this.currentUser$.next(null);
+    void this.router.navigateByUrl('/login');
   }
 
   me(): Observable<AuthUser | null> {
     if (this.tokenStorage.isAuthenticated() && !this.profileLoaded) {
       this.profileLoaded = true;
       this.http
-        .get<{ user: AuthUser }>(`${this.apiBaseUrl}/api/auth/me`)
+        .get<PrivateUserProfile>(`${this.apiBaseUrl}/api/auth/me`)
         .pipe(
-          map((response) => response.user),
           tap((user) => {
             this.tokenStorage.setUser(user);
             this.currentUser$.next(user);
