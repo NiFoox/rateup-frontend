@@ -1,0 +1,67 @@
+:host {
+  display: block;
+}
+
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.12), rgba(103, 58, 183, 0.12));
+}
+
+.login-form {
+  width: min(100%, 420px);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2.5rem 2rem;
+  border-radius: 1.5rem;
+  background-color: var(--mat-sys-surface, #ffffff);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.15);
+}
+
+.login-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  font-weight: 600;
+  text-align: center;
+}
+
+.form-field {
+  width: 100%;
+}
+
+.remember-checkbox {
+  margin-top: -0.5rem;
+}
+
+.login-error {
+  margin: -0.5rem 0 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background-color: rgba(229, 57, 53, 0.08);
+  color: #c62828;
+  font-weight: 500;
+}
+
+.submit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+}
+
+.submit-button mat-progress-spinner {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.submit-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}

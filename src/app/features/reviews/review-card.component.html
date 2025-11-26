@@ -1,0 +1,108 @@
+<mat-card class="review-card" [class.skeleton]="skeleton">
+  <div class="card-layout">
+    <div class="vote-column">
+      @if (skeleton) {
+        <div class="vote-placeholder large" aria-hidden="true"></div>
+        <div class="vote-placeholder" aria-hidden="true"></div>
+        <div class="vote-placeholder large" aria-hidden="true"></div>
+      } @else {
+        <button
+          mat-icon-button
+          type="button"
+          class="vote-button"
+          [class.active]="isActive(1)"
+          [attr.aria-pressed]="isActive(1)"
+          (click)="handleVote(1)"
+          aria-label="Votar positivo"
+          matTooltip="Votar positivo"
+        >
+          <mat-icon>arrow_upward</mat-icon>
+        </button>
+        <span class="score" aria-live="polite">{{ score() }}</span>
+        <button
+          mat-icon-button
+          type="button"
+          class="vote-button"
+          [class.active]="isActive(-1)"
+          [attr.aria-pressed]="isActive(-1)"
+          (click)="handleVote(-1)"
+          aria-label="Votar negativo"
+          matTooltip="Votar negativo"
+        >
+          <mat-icon>arrow_downward</mat-icon>
+        </button>
+      }
+    </div>
+
+    <div class="review-content">
+      @if (skeleton) {
+        <div class="skeleton-line title"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-tags">
+          @for (tag of skeletonTags; track tag) {
+            <div class="skeleton-tag"></div>
+          }
+        </div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+      } @else if (review) {
+        <header class="review-header">
+          <div class="title-row">
+            <a
+              class="title"
+              [routerLink]="['/reviews', review.id]"
+              [attr.aria-label]="'Abrir detalle de ' + review.title"
+            >
+              {{ review.title }}
+            </a>
+            <span
+              class="rating"
+              [attr.aria-label]="'Calificación ' + review.rating + ' sobre 10'"
+            >
+              <mat-icon>star</mat-icon>
+              {{ review.rating }}/10
+            </span>
+          </div>
+          <p class="meta">
+            <span class="game">{{ review.game }}</span>
+            <span class="separator" aria-hidden="true">•</span>
+            <span class="author">por {{ review.authorName }}</span>
+            <span class="separator" aria-hidden="true">•</span>
+            <span class="date">{{ relative(review.createdAt) }}</span>
+            @if (review.updatedAt) {
+              <span class="separator" aria-hidden="true">•</span>
+              <span class="updated">actualizado {{ relative(review.updatedAt) }}</span>
+            }
+          </p>
+        </header>
+
+        <mat-chip-set aria-label="Etiquetas" class="tags">
+          @for (tag of review.tags; track tag) {
+            <mat-chip>{{ tag }}</mat-chip>
+          }
+        </mat-chip-set>
+
+        <p class="body">{{ review.body }}</p>
+
+        <mat-divider></mat-divider>
+
+        <mat-card-actions align="start">
+          <a
+            mat-button
+            [routerLink]="['/reviews', review.id]"
+            aria-label="Abrir comentarios"
+          >
+            <mat-icon>mode_comment</mat-icon>
+            Comentarios
+            <span class="count" aria-hidden="true">({{ review.comments }})</span>
+          </a>
+          <a mat-button [routerLink]="['/reviews', review.id]" aria-label="Ver detalle de la reseña">
+            <mat-icon>open_in_new</mat-icon>
+            Ver
+          </a>
+        </mat-card-actions>
+      }
+    </div>
+  </div>
+</mat-card>
