@@ -85,7 +85,7 @@ export class ReviewDetailPage {
             return EMPTY;
           }
           this.loading.set(true);
-          return this.reviewsService.getById(id).pipe(
+          return this.reviewsService.getFull(id).pipe(
             catchError((error) => {
               this.loading.set(false);
               const message = error instanceof Error ? error.message : 'No se pudo cargar la reseña';
@@ -97,8 +97,8 @@ export class ReviewDetailPage {
         }),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe((review) => {
-        this.review.set(review);
+      .subscribe((result) => {
+        this.review.set(result.review);
         this.loading.set(false);
       });
   }
@@ -124,15 +124,20 @@ export class ReviewDetailPage {
 
     const optimistic: ReviewWithUserVote = {
       ...current,
-      votes: current.votes + voteDelta,
+      voteSummary: {
+        ...current.voteSummary,
+        score: current.voteSummary.score + voteDelta,
+        upvotes: current.voteSummary.upvotes + (nextVote === 1 ? 1 : previousVote === 1 ? -1 : 0),
+        downvotes: current.voteSummary.downvotes + (nextVote === -1 ? 1 : previousVote === -1 ? -1 : 0)
+      },
       userVote: nextVote
     };
     this.review.set(optimistic);
     this.loadingVote.set(true);
 
-    this.reviewsService.vote(current.id, direction).subscribe({
-      next: ({ review: updated, userVote }) => {
-        this.review.set({ ...updated, userVote });
+    this.reviewsService.vote(current.id, nextVote).subscribe({
+      next: ({ voteSummary, userVote }) => {
+        this.review.set({ ...current, voteSummary, userVote });
         this.loadingVote.set(false);
       },
       error: (error) => {

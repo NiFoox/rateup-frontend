@@ -75,7 +75,7 @@ export class CommentFormComponent {
     }
 
     this.submitting.set(true);
-    this.reviewsService.addComment(this.reviewId, value, authorName).subscribe({
+    this.reviewsService.addComment(this.reviewId, value).subscribe({
       next: (comment) => {
         this.created.emit(comment);
         this.control.setValue('');

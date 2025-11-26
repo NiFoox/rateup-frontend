@@ -4,7 +4,7 @@ export interface Review {
   userId: string;
   content: string;
   score: number;
-  votes: number;
+  voteSummary: VoteSummary;
   comments: number;
   createdAt: string;
   updatedAt?: string;
@@ -21,6 +21,13 @@ export interface Review {
 }
 
 export type VoteValue = -1 | 0 | 1;
+
+export interface VoteSummary {
+  reviewId: string;
+  upvotes: number;
+  downvotes: number;
+  score: number;
+}
 
 export interface ReviewVote {
   reviewId: string;
@@ -49,6 +56,7 @@ export interface ReviewsQuery {
   tag?: string;
   game?: string;
   sort?: 'hot' | 'new' | 'top';
+  days?: number;
 }
 
 export interface PagedResult<T> {

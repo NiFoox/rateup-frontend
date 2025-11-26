@@ -28,4 +28,54 @@
       </mat-card-content>
     </mat-card>
   }
+
+  <section class="home-section">
+    <header class="section-header">
+      <h2>Juegos destacados</h2>
+      <p>Basados en calificaciones y cantidad de reseñas</p>
+    </header>
+
+    <div class="cards">
+      @for (game of topGames().items; track game.id) {
+        <mat-card appearance="outlined" class="game-card">
+          <mat-card-title>{{ game.name }}</mat-card-title>
+          <mat-card-subtitle>{{ game.genre }}</mat-card-subtitle>
+          <mat-card-content>
+            <p class="description">{{ game.description }}</p>
+            <p class="meta">
+              <strong>Promedio:</strong> {{ game.avgScore ?? '—' }}
+              • <strong>Reseñas:</strong> {{ game.reviewCount ?? 0 }}
+            </p>
+          </mat-card-content>
+        </mat-card>
+      } @empty {
+        <p class="empty">Aún no hay juegos destacados.</p>
+      }
+    </div>
+  </section>
+
+  <section class="home-section">
+    <header class="section-header">
+      <h2>Reviews con tendencia</h2>
+      <p>Actividad reciente de la comunidad</p>
+    </header>
+
+    <div class="cards">
+      @for (review of trendingReviews(); track review.id) {
+        <mat-card appearance="outlined" class="review-card">
+          <mat-card-title>{{ review.game?.name ?? ('Juego ' + review.gameId) }}</mat-card-title>
+          <mat-card-subtitle>Por {{ review.user?.username ?? ('Usuario ' + review.userId) }}</mat-card-subtitle>
+          <mat-card-content>
+            <p class="description">{{ review.content }}</p>
+            <p class="meta">
+              <strong>Score:</strong> {{ review.score }}
+              • <strong>Votos:</strong> {{ review.voteSummary.score }}
+            </p>
+          </mat-card-content>
+        </mat-card>
+      } @empty {
+        <p class="empty">Sin actividad reciente.</p>
+      }
+    </div>
+  </section>
 </div>
