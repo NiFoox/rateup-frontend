@@ -39,13 +39,13 @@ export class UserFormDialogComponent {
   private readonly dialogRef = inject(MatDialogRef<UserFormDialogComponent, UserFormDialogResult>);
 
   readonly data: UserFormDialogData;
-  readonly rolesOptions = ['admin', 'editor', 'viewer'];
+  readonly rolesOptions = ['ADMIN', 'USER'];
 
   readonly form = this.fb.nonNullable.group({
-    name: ['', [Validators.required, Validators.minLength(3)]],
+    username: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.email]],
     roles: this.fb.nonNullable.control<string[]>([], [Validators.required]),
-    active: this.fb.nonNullable.control(true),
+    isActive: this.fb.nonNullable.control(true),
     password: ['']
   });
 
@@ -54,10 +54,10 @@ export class UserFormDialogComponent {
 
     if (data.mode === 'edit' && data.user) {
       this.form.patchValue({
-        name: data.user.name,
+        username: data.user.username,
         email: data.user.email,
         roles: [...data.user.roles],
-        active: data.user.active
+        isActive: data.user.isActive
       });
     }
   }
@@ -68,12 +68,12 @@ export class UserFormDialogComponent {
       return;
     }
 
-    const { name, email, roles, active, password } = this.form.getRawValue();
+    const { username, email, roles, isActive, password } = this.form.getRawValue();
     const result: UserFormDialogResult = {
-      name: name.trim(),
+      username: username.trim(),
       email: email.trim().toLowerCase(),
       roles: [...roles],
-      active,
+      isActive: isActive,
       ...(password ? { password } : {})
     };
 

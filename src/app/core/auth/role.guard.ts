@@ -6,15 +6,20 @@ import { TokenStorageService } from './token-storage.service';
 import { AuthUser } from './auth.models';
 import { DEBUG } from '../debug';
 
-const extractRequiredRoles = (route: ActivatedRouteSnapshot): string[] => {
+type AppRole = 'USER' | 'ADMIN';
+
+const extractRequiredRoles = (route: ActivatedRouteSnapshot): AppRole[] => {
   const roles = route.data?.['roles'];
 
   if (Array.isArray(roles)) {
-    return roles.filter((role): role is string => typeof role === 'string' && role.length > 0);
+    return roles.filter(
+      (role): role is AppRole =>
+        typeof role === 'string' && (role === 'USER' || role === 'ADMIN')
+    );
   }
 
   return [];
-};
+}
 
 const resolveCurrentUser = (
   tokenStorage: TokenStorageService,
@@ -42,13 +47,10 @@ export const roleGuard: CanActivateFn = (route) => {
     return true;
   }
 
-  if (!isAuthenticated) {
-    void router.navigateByUrl('/login', { replaceUrl: true });
-    return false;
-  }
-
   const currentUser = resolveCurrentUser(tokenStorage, authService);
-  const userRoles = currentUser?.roles ?? [];
+  const userRoles: AppRole[] = (currentUser?.roles ?? []).filter(
+    (role): role is AppRole => role === 'USER' || role === 'ADMIN'
+  );
   DEBUG && console.debug('[GUARD role] user roles', { requiredRoles, userRoles });
 
   if (!currentUser) {

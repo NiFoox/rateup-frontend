@@ -37,6 +37,7 @@ export class AppToolbar {
       return false;
     }
 
-    return currentUser.roles.includes(role);
+    // roles are typed as a union of specific literals; cast to string[] to allow dynamic checks
+    return (currentUser.roles as string[]).includes(role);
   }
 }

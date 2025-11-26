@@ -1,14 +1,14 @@
 export interface User {
   id: string;
-  name: string;
+  username: string;
   email: string;
   roles: string[];
-  active: boolean;
+  isActive: boolean;
   createdAt: string;
 }
 
 export interface PagedResult<T> {
-  items: T[];
+  data: T[];
   total: number;
   page: number;
   pageSize: number;

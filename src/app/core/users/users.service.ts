@@ -22,15 +22,15 @@ type UserListParams = {
 
 interface UserDto {
   id: string;
-  name: string;
+  username: string;
   email: string;
   roles: string[];
-  active: boolean;
+  isActive: boolean;
   createdAt: string;
 }
 
 interface PagedResultDto<T> {
-  items: T[];
+  data: T[];
   total: number;
   page: number;
   pageSize: number;
@@ -44,8 +44,8 @@ export class UsersService {
   list(params: UserListParams): Observable<PagedResult<User>> {
     const httpParams = new HttpParams({
       fromObject: {
-        page: String(params.page),
-        limit: String(params.pageSize),
+        page: params.page,
+        limit: params.pageSize,
         search: params.search ?? '',
         sort: params.sort ?? '',
         dir: params.dir ?? '',
@@ -90,7 +90,7 @@ export class UsersService {
     mapItem: (item: TDto) => TModel
   ): PagedResult<TModel> {
     return {
-      items: dto.items.map(mapItem),
+      data: dto.data.map(mapItem),
       total: dto.total,
       page: dto.page,
       pageSize: dto.pageSize
@@ -100,10 +100,10 @@ export class UsersService {
   private mapUser(dto: UserDto): User {
     return {
       id: dto.id,
-      name: dto.name,
+      username: dto.username,
       email: dto.email,
       roles: Array.isArray(dto.roles) ? [...dto.roles] : [],
-      active: dto.active,
+      isActive: dto.isActive,
       createdAt: new Date(dto.createdAt).toISOString()
     } satisfies User;
   }
