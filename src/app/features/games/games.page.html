@@ -2,6 +2,12 @@
   <div class="games-header">
     <h1>Juegos</h1>
     <p>Listado registrado en el sistema</p>
+
+    <!-- BOTÓN CREAR JUEGO -->
+    <button mat-raised-button color="primary" (click)="openCreateDialog()">
+      <mat-icon>add</mat-icon>
+      Crear juego
+    </button>
   </div>
 
   <div class="table-wrapper">
@@ -25,10 +31,12 @@
           <td>{{ game.genre }}</td>
 
           <td class="actions">
-            <button mat-icon-button (click)="openEditDialog(game)">
+            <!-- EDITAR -->
+            <button mat-icon-button color="primary" (click)="openEditDialog(game)">
               <mat-icon>edit</mat-icon>
             </button>
 
+            <!-- ELIMINAR -->
             <button mat-icon-button color="warn" (click)="confirmDelete(game)">
               <mat-icon>delete</mat-icon>
             </button>
@@ -43,4 +51,3 @@
     </div>
   </div>
 </div>
-

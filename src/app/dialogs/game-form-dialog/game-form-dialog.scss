@@ -1,0 +1,33 @@
+:host {
+  display: block;
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+h2 {
+  margin: 0 0 20px 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #333;
+}
+
+mat-form-field {
+  width: 100%;
+  margin-bottom: 16px;
+
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    border-radius: 8px !important;
+  }
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+
+  button {
+    min-width: 90px;
+  }
+}

@@ -4,6 +4,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 
+import { GameFormDialogComponent } from '../../dialogs/game-form-dialog/game-form-dialog';
+
 @Component({
   selector: 'app-games-page',
   standalone: true,
@@ -14,20 +16,50 @@ import { MatDialog } from '@angular/material/dialog';
 })
 export class GamesPage {
 
-  games = [
-    { name: 'maincra', description: 'Description for Game 1', genre: 'Action' },
-    { name: 'Game 2', description: 'Description for Game 2', genre: 'Adventure' }
-  ];
 
-  constructor() {}
+  games: any[] = [];
+
+  constructor(private dialog: MatDialog) {}
+
+
+  openCreateDialog() {
+    const dialogRef = this.dialog.open(GameFormDialogComponent, {
+      width: '400px',
+      data: {
+        mode: 'create',
+        game: { name: '', description: '', genre: '' }
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.games.push(result);
+      }
+    });
+  }
+
 
   openEditDialog(game: any) {
-    console.log('Editar juego:', game);
+    const dialogRef = this.dialog.open(GameFormDialogComponent, {
+      width: '400px',
+      data: {
+        mode: 'edit',
+        game: { ...game }
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        game.name = result.name;
+        game.description = result.description;
+        game.genre = result.genre;
+      }
+    });
   }
+
 
   confirmDelete(game: any) {
-    console.log('Eliminar juego:', game);
+    this.games = this.games.filter(g => g !== game);
   }
 }
-
 

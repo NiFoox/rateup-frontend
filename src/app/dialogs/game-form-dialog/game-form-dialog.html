@@ -1,0 +1,26 @@
+<h2 mat-dialog-title>
+  {{ data.mode === 'create' ? 'Crear juego' : 'Editar juego' }}
+</h2>
+
+<div mat-dialog-content>
+  <mat-form-field appearance="outline">
+    <mat-label>Nombre</mat-label>
+    <input matInput [(ngModel)]="data.game.name">
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Descripción</mat-label>
+    <input matInput [(ngModel)]="data.game.description">
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Género</mat-label>
+    <input matInput [(ngModel)]="data.game.genre">
+  </mat-form-field>
+</div>
+
+<div mat-dialog-actions>
+  <button mat-button (click)="cancel()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="save()">Guardar</button>
+</div>
+
