@@ -53,6 +53,32 @@ export class ReviewCardComponent {
   }
 
   protected score(): number {
-    return this.review?.votes ?? 0;
+    return this.review?.voteSummary.score ?? 0;
+  }
+
+  protected displayTitle(): string {
+    if (!this.review) {
+      return '';
+    }
+    return this.review.game?.name ?? `Reseña #${this.review.id}`;
+  }
+
+  protected displayGame(): string {
+    if (!this.review) {
+      return '';
+    }
+    if (this.review.game?.name) {
+      return this.review.game.genre
+        ? `${this.review.game.name} • ${this.review.game.genre}`
+        : this.review.game.name;
+    }
+    return `Juego ${this.review.gameId}`;
+  }
+
+  protected displayAuthor(): string {
+    if (!this.review) {
+      return '';
+    }
+    return this.review.user?.username ?? `Usuario ${this.review.userId}`;
   }
 }

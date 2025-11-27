@@ -52,22 +52,22 @@
             <a
               class="title"
               [routerLink]="['/reviews', review.id]"
-              [attr.aria-label]="'Abrir detalle de ' + review.title"
+              [attr.aria-label]="'Abrir detalle de ' + displayTitle()"
             >
-              {{ review.title }}
+              {{ displayTitle() }}
             </a>
             <span
               class="rating"
-              [attr.aria-label]="'Calificación ' + review.rating + ' sobre 10'"
+              [attr.aria-label]="'Calificación ' + review.score + ' sobre 5'"
             >
               <mat-icon>star</mat-icon>
-              {{ review.rating }}/10
+              {{ review.score }}/5
             </span>
           </div>
           <p class="meta">
-            <span class="game">{{ review.game }}</span>
+            <span class="game">{{ displayGame() }}</span>
             <span class="separator" aria-hidden="true">•</span>
-            <span class="author">por {{ review.authorName }}</span>
+            <span class="author">por {{ displayAuthor() }}</span>
             <span class="separator" aria-hidden="true">•</span>
             <span class="date">{{ relative(review.createdAt) }}</span>
             @if (review.updatedAt) {
@@ -77,13 +77,7 @@
           </p>
         </header>
 
-        <mat-chip-set aria-label="Etiquetas" class="tags">
-          @for (tag of review.tags; track tag) {
-            <mat-chip>{{ tag }}</mat-chip>
-          }
-        </mat-chip-set>
-
-        <p class="body">{{ review.body }}</p>
+        <p class="body">{{ review.content }}</p>
 
         <mat-divider></mat-divider>
 

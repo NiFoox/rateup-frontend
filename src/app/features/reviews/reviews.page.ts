@@ -136,7 +136,12 @@ export class ReviewsPage implements OnDestroy {
 
     const optimistic: ReviewWithUserVote = {
       ...previous,
-      votes: previous.votes + voteDelta,
+      voteSummary: {
+        ...previous.voteSummary,
+        score: previous.voteSummary.score + voteDelta,
+        upvotes: previous.voteSummary.upvotes + (nextVote === 1 ? 1 : previousVote === 1 ? -1 : 0),
+        downvotes: previous.voteSummary.downvotes + (nextVote === -1 ? 1 : previousVote === -1 ? -1 : 0)
+      },
       userVote: nextVote
     };
 
@@ -144,16 +149,17 @@ export class ReviewsPage implements OnDestroy {
     optimisticItems[index] = optimistic;
     this.items.set(optimisticItems);
 
-    this.reviewsService.vote(review.id, direction).subscribe({
-      next: ({ review: updated, userVote }) => {
+    this.reviewsService.vote(review.id, nextVote).subscribe({
+      next: ({ voteSummary, userVote }) => {
         const current = this.items();
-        const currentIndex = current.findIndex((item) => item.id === updated.id);
+        const currentIndex = current.findIndex((item) => item.id === review.id);
         if (currentIndex === -1) {
           return;
         }
         const merged = [...current];
         merged[currentIndex] = {
-          ...updated,
+          ...current[currentIndex],
+          voteSummary,
           userVote
         };
         this.items.set(merged);
@@ -219,7 +225,7 @@ export class ReviewsPage implements OnDestroy {
         const merged = append ? [...this.items(), ...result.items] : result.items;
         this.items.set(merged);
         this.page.set(result.page);
-        const hasMore = result.page * result.pageSize < result.total;
+        const hasMore = result.items.length === result.pageSize;
         this.hasMore.set(hasMore);
         this.loading.set(false);
         this.loadingMore.set(false);

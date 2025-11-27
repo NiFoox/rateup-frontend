@@ -122,7 +122,7 @@ export class CommentListComponent implements OnChanges {
       return;
     }
     this.editingId.set(comment.id);
-    this.editControl.setValue(comment.body);
+    this.editControl.setValue(comment.content);
   }
 
   protected cancelEdit(): void {
@@ -154,7 +154,7 @@ export class CommentListComponent implements OnChanges {
     }
 
     this.savingEdit.set(true);
-    this.reviewsService.editComment(this.reviewId, comment.id, value, userId).subscribe({
+    this.reviewsService.editComment(this.reviewId, comment.id, value).subscribe({
       next: (updated) => {
         const list = this.comments();
         const index = list.findIndex((item) => item.id === updated.id);
@@ -193,7 +193,7 @@ export class CommentListComponent implements OnChanges {
     }
 
     this.deletingId.set(comment.id);
-    this.reviewsService.deleteComment(this.reviewId, comment.id, userId).subscribe({
+    this.reviewsService.deleteComment(this.reviewId, comment.id).subscribe({
       next: () => {
         const filtered = this.comments().filter((item) => item.id !== comment.id);
         this.comments.set(filtered);
@@ -242,7 +242,7 @@ export class CommentListComponent implements OnChanges {
         this.comments.set(nextItems);
         this.page = result.page;
         this.total.set(result.total);
-        const hasMore = result.page * result.pageSize < result.total;
+        const hasMore = result.items.length === result.pageSize;
         this.hasMore.set(hasMore);
         this.loading.set(false);
         this.loadingMore.set(false);

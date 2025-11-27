@@ -26,7 +26,7 @@
           >
             <mat-icon>arrow_upward</mat-icon>
           </button>
-          <span class="score" aria-live="polite">{{ review.votes }}</span>
+          <span class="score" aria-live="polite">{{ review.voteSummary.score }}</span>
           <button
             mat-icon-button
             type="button"
@@ -45,16 +45,22 @@
         <div class="content">
           <header class="header">
             <div class="title-row">
-              <h1 class="title">{{ review.title }}</h1>
-              <span class="rating" [attr.aria-label]="'Calificación ' + review.rating + ' sobre 10'">
+              <h1 class="title">{{ review.game?.name ?? ('Reseña #' + review.id) }}</h1>
+              <span class="rating" [attr.aria-label]="'Calificación ' + review.score + ' sobre 5'">
                 <mat-icon>star</mat-icon>
-                {{ review.rating }}/10
+                {{ review.score }}/5
               </span>
             </div>
             <p class="meta">
-              <span class="game">{{ review.game }}</span>
+              <span class="game">
+                {{ review.game?.name ?? ('Juego ' + review.gameId) }}
+                @if (review.game?.genre) {
+                  <span class="separator" aria-hidden="true">•</span>
+                  <!-- <span class="genre">{{ review.game.genre }}</span> -->
+                }
+              </span>
               <span class="separator" aria-hidden="true">•</span>
-              <span class="author">por {{ review.authorName }}</span>
+              <span class="author">por {{ review.user?.username ?? ('Usuario ' + review.userId) }}</span>
               <span class="separator" aria-hidden="true">•</span>
               <span class="date">{{ relative(review.createdAt) }}</span>
               @if (review.updatedAt) {
@@ -64,15 +70,9 @@
             </p>
           </header>
 
-          <mat-chip-set aria-label="Etiquetas" class="tags">
-            @for (tag of review.tags; track tag) {
-              <mat-chip>{{ tag }}</mat-chip>
-            }
-          </mat-chip-set>
-
           <mat-divider></mat-divider>
 
-          <div class="body">{{ review.body }}</div>
+          <div class="body">{{ review.content }}</div>
         </div>
       </div>
     </mat-card>
