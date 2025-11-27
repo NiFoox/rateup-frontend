@@ -25,23 +25,6 @@
         <mat-icon>close</mat-icon>
       </button>
     </mat-form-field>
-
-    <mat-form-field appearance="fill">
-      <mat-label>Rol</mat-label>
-      <mat-select formControlName="role">
-        <mat-option value="all">Todos</mat-option>
-        <mat-option *ngFor="let role of rolesOptions" [value]="role">{{ role | titlecase }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="fill">
-      <mat-label>Estado</mat-label>
-      <mat-select formControlName="isActive">
-        <mat-option value="all">Todos</mat-option>
-        <mat-option value="true">Activos</mat-option>
-        <mat-option value="false">Inactivos</mat-option>
-      </mat-select>
-    </mat-form-field>
   </form>
 
   <div class="table-wrapper" [class.loading]="isLoading() || isMutating()">

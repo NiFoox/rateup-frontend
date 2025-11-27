@@ -29,13 +29,13 @@ export const routes: Routes = [
   {
     path: 'games',
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['editor', 'admin'] },
+    data: { roles: ['ADMIN'] },
     loadComponent: () => import('./features/games/games.page').then((m) => m.GamesPage)
   },
   {
     path: 'users',
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['admin'] },
+    data: { roles: ['ADMIN'] },
     loadComponent: () => import('./features/users/users.component').then((m) => m.UsersComponent)
   },
   {

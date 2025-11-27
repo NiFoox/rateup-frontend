@@ -92,12 +92,8 @@ export class UsersComponent implements OnInit {
     }
   );
 
-  readonly rolesOptions = ['admin', 'editor', 'viewer'];
-
   readonly filterForm = this.fb.nonNullable.group({
-    search: [''],
-    role: ['all'],
-    active: ['all']
+    search: ['']
   });
 
   ngOnInit(): void {
@@ -224,18 +220,12 @@ export class UsersComponent implements OnInit {
   private loadUsers(): void {
     this.isLoading.set(true);
     const filters = this.filterForm.getRawValue();
-    const role = filters.role === 'all' ? undefined : filters.role;
-    const active = filters.active === 'all' ? undefined : filters.active === 'true';
 
     this.usersService
       .list({
         page: this.pageIndex(),
         pageSize: this.pageSize(),
-        search: filters.search || undefined,
-        sort: this.sortState().active,
-        dir: this.sortState().direction,
-        role,
-        active
+        search: filters.search || undefined
       })
       .pipe(
         finalize(() => this.isLoading.set(false)),

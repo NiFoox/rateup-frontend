@@ -53,7 +53,7 @@ export class ReviewCardComponent {
   }
 
   protected score(): number {
-    return this.review?.votes ?? 0;
+    return this.review?.voteSummary.score ?? 0;
   }
 
   protected displayTitle(): string {

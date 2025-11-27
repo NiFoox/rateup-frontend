@@ -5,8 +5,6 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { PagedResult, User } from './users.models';
 
-type SortDirection = 'asc' | 'desc';
-
 type UserCreatePayload = Omit<User, 'id' | 'createdAt'> & { password?: string };
 type UserUpdatePayload = Partial<Omit<User, 'id' | 'createdAt'>>;
 
@@ -14,10 +12,6 @@ type UserListParams = {
   page: number;
   pageSize: number;
   search?: string;
-  sort?: keyof User;
-  dir?: SortDirection;
-  role?: string;
-  active?: boolean;
 };
 
 interface UserDto {
@@ -45,12 +39,8 @@ export class UsersService {
     const httpParams = new HttpParams({
       fromObject: {
         page: params.page,
-        limit: params.pageSize,
-        search: params.search ?? '',
-        sort: params.sort ?? '',
-        dir: params.dir ?? '',
-        role: params.role ?? '',
-        active: params.active === undefined ? '' : String(params.active)
+        pageSize: params.pageSize,
+        search: params.search ?? ''
       }
     });
 
@@ -71,7 +61,7 @@ export class UsersService {
 
   update(id: string, payload: UserUpdatePayload): Observable<User> {
     return this.http
-      .put<UserDto>(`${this.apiUrl}/${id}`, payload)
+      .patch<UserDto>(`${this.apiUrl}/${id}`, payload)
       .pipe(map((dto) => this.mapUser(dto)));
   }
 
@@ -81,7 +71,7 @@ export class UsersService {
 
   setStatus(id: string, active: boolean): Observable<User> {
     return this.http
-      .patch<UserDto>(`${this.apiUrl}/${id}/status`, { active })
+      .patch<UserDto>(`${this.apiUrl}/${id}`, { isActive: active })
       .pipe(map((dto) => this.mapUser(dto)));
   }
 

@@ -154,7 +154,7 @@ export class CommentListComponent implements OnChanges {
     }
 
     this.savingEdit.set(true);
-    this.reviewsService.editComment(this.reviewId, comment.id, value, userId).subscribe({
+    this.reviewsService.editComment(this.reviewId, comment.id, value).subscribe({
       next: (updated) => {
         const list = this.comments();
         const index = list.findIndex((item) => item.id === updated.id);
@@ -193,7 +193,7 @@ export class CommentListComponent implements OnChanges {
     }
 
     this.deletingId.set(comment.id);
-    this.reviewsService.deleteComment(this.reviewId, comment.id, userId).subscribe({
+    this.reviewsService.deleteComment(this.reviewId, comment.id).subscribe({
       next: () => {
         const filtered = this.comments().filter((item) => item.id !== comment.id);
         this.comments.set(filtered);
