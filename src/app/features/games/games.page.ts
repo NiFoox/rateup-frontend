@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, DestroyRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,7 +23,6 @@ import { Game } from '../../core/games/game.model';
     MatButtonModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    GameFormDialogComponent
   ],
   templateUrl: './games.page.html',
   styleUrls: ['./games.page.scss'],
@@ -33,6 +32,7 @@ export class GamesPage implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly gamesService = inject(GamesService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly games = signal<Game[]>([]);
   protected readonly loading = signal(false);
@@ -53,13 +53,19 @@ export class GamesPage implements OnInit {
 
     dialogRef
       .afterClosed()
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((result?: Game) => {
         if (!result) {
           return;
         }
 
-        this.mutate(this.gamesService.create(result), 'Juego creado correctamente');
+      const payload = {
+        name: result.name,
+        description: result.description,
+        genre: result.genre
+      };
+
+      this.mutate(this.gamesService.create(payload), 'Juego creado correctamente');
       });
   }
 
@@ -74,13 +80,19 @@ export class GamesPage implements OnInit {
 
     dialogRef
       .afterClosed()
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((result?: Game) => {
         if (!result || !game.id) {
           return;
         }
 
-        this.mutate(this.gamesService.update(game.id, result), 'Juego actualizado');
+      const payload = {
+        name: result.name,
+        description: result.description,
+        genre: result.genre
+      };
+
+      this.mutate(this.gamesService.update(game.id, payload), 'Juego actualizado');
       });
   }
 
@@ -101,7 +113,7 @@ export class GamesPage implements OnInit {
     this.loading.set(true);
     this.gamesService
       .list({ all: true })
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (result) => {
           this.games.set(result.items);
@@ -116,7 +128,7 @@ export class GamesPage implements OnInit {
 
   private mutate(request: Observable<unknown>, successMessage: string): void {
     this.mutating.set(true);
-    request.pipe(takeUntilDestroyed()).subscribe({
+    request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.mutating.set(false);
         this.snackBar.open(successMessage, 'Cerrar', { duration: 2500 });

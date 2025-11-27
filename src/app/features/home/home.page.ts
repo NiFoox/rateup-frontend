@@ -17,7 +17,7 @@ import { Game } from '../../core/games/game.model';
   standalone: true,
   imports: [CommonModule, MatCardModule, MatChipsModule, MatDividerModule],
   templateUrl: './home.page.html',
-  styleUrl: './home.page.scss',
+  styleUrls: ['./home.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomePage {
@@ -31,10 +31,20 @@ export class HomePage {
 
   readonly topGames = toSignal(
     this.homeService.getTopGames(5, 1),
-    { initialValue: { items: [] as Array<Game & { avgScore?: number; reviewCount?: number }>, count: 0, limit: 5, minReviews: 1 } }
+    {
+      initialValue: {
+        items: [] as Array<Game & { avgScore?: number; reviewCount?: number }>,
+        count: 0,
+        limit: 5,
+        minReviews: 1
+      }
+    }
   );
 
-  readonly trendingReviews = toSignal<ReviewWithUserVote[]>(this.homeService.getTrendingReviews(5, 7), {
-    initialValue: []
-  });
+  readonly trendingReviews = toSignal(
+    this.homeService.getTrendingReviews(5, 7),
+    {
+      initialValue: [] as ReviewWithUserVote[]
+    }
+  );
 }

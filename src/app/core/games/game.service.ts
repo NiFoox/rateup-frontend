@@ -20,7 +20,7 @@ type PaginatedGamesDto = {
   data: GameDto[];
 };
 
-type GamesQuery = {
+export type GamesQuery = {
   page?: number;
   limit?: number;
   search?: string;
