@@ -31,8 +31,8 @@ import {
   UserFormDialogComponent,
   UserFormDialogData,
   UserFormDialogResult
-} from './users.form-dialog';
-import { UsersConfirmDialogComponent } from './users.confirm-dialog';
+} from './components/users.form-dialog';
+import { UsersConfirmDialogComponent } from './components/users.confirm-dialog';
 
 type SortDirection = 'asc' | 'desc';
 
@@ -59,8 +59,8 @@ type ErrorWithStatus = Error & { status?: number };
     MatProgressSpinnerModule,
     MatSlideToggleModule
   ],
-  templateUrl: './users.component.html',
-  styleUrl: './users.component.scss',
+  templateUrl: './users.page.html',
+  styleUrl: './users.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UsersComponent implements OnInit {

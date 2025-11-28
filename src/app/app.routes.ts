@@ -8,7 +8,7 @@ export const routes: Routes = [
     path: 'login',
     data: { hideToolbar: true },
     loadComponent: () =>
-      import('./features/auth/pages/login/login.component').then((m) => m.LoginComponent)
+      import('./features/auth/login.page').then((m) => m.LoginComponent)
   },
   {
     path: 'home',
@@ -36,7 +36,7 @@ export const routes: Routes = [
     path: 'users',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['ADMIN'] },
-    loadComponent: () => import('./features/users/users.component').then((m) => m.UsersComponent)
+    loadComponent: () => import('./features/users/users.page').then((m) => m.UsersComponent)
   },
   {
     path: 'profile',

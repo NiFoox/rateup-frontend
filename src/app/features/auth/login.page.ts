@@ -18,9 +18,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
-import { AuthService } from '../../../../core/auth/auth.service';
-import { LoginRequest } from '../../../../core/auth/auth.models';
-import { DEBUG } from '../../../../core/debug';
+import { AuthService } from '../../core/auth/auth.service';
+import { LoginRequest } from '../../core/auth/auth.models';
+import { DEBUG } from '../../core/debug';
 
 interface MockHttpError extends Error {
   status: number;
@@ -39,8 +39,8 @@ interface MockHttpError extends Error {
     MatProgressSpinnerModule,
     MatCheckboxModule,
   ],
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.scss',
+  templateUrl: './login.page.html',
+  styleUrl: './login.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginComponent {

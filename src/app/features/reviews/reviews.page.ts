@@ -27,8 +27,8 @@ import { debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
 
 import { ReviewWithUserVote, ReviewsQuery, VoteValue } from '../../core/reviews/reviews.models';
 import { ReviewsService } from '../../core/reviews/reviews.service';
-import { TokenStorage } from '../../core/auth/token-storage';
-import { ReviewCardComponent } from './review-card.component';
+import { TokenStorageService } from '../../core/auth/token-storage.service';
+import { ReviewCardComponent } from './components/review-card';
 
 type VoteDirection = Exclude<VoteValue, 0>;
 
@@ -86,6 +86,7 @@ export class ReviewsPage implements OnDestroy {
   private readonly reviewsService = inject(ReviewsService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly tokenStorage = inject(TokenStorageService)
   private currentQuery: ReviewsQuery = {
     page: 1,
     pageSize: 10,
@@ -121,7 +122,7 @@ export class ReviewsPage implements OnDestroy {
       return;
     }
 
-    const user = TokenStorage.getUser();
+    const user = this.tokenStorage.getUser();
     if (!user?.id) {
       this.snackBar.open('Necesitas iniciar sesión para votar', 'Cerrar', {
         duration: 3000

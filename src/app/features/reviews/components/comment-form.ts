@@ -15,9 +15,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
-import { ReviewsService } from '../../core/reviews/reviews.service';
-import { Comment } from '../../core/reviews/reviews.models';
-import { TokenStorage } from '../../core/auth/token-storage';
+import { ReviewsService } from '../../../core/reviews/reviews.service';
+import { Comment } from '../../../core/reviews/reviews.models';
+import { TokenStorageService } from '../../../core/auth/token-storage.service';
 
 @Component({
   selector: 'app-comment-form',
@@ -31,8 +31,8 @@ import { TokenStorage } from '../../core/auth/token-storage';
     MatInputModule,
     MatSnackBarModule
   ],
-  templateUrl: './comment-form.component.html',
-  styleUrl: './comment-form.component.scss',
+  templateUrl: './comment-form.html',
+  styleUrl: './comment-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CommentFormComponent {
@@ -47,13 +47,14 @@ export class CommentFormComponent {
 
   private readonly reviewsService = inject(ReviewsService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly tokenStorage = inject(TokenStorageService);
 
   protected submit(): void {
     if (this.submitting() || this.control.invalid || !this.reviewId) {
       return;
     }
 
-    const user = TokenStorage.getUser();
+    const user = this.tokenStorage.getUser();
     const userId = user?.id ?? '';
     const authorName = user?.username ?? '';
 

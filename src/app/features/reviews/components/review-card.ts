@@ -9,8 +9,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
 
-import { ReviewWithUserVote, VoteValue } from '../../core/reviews/reviews.models';
-import { fromNow } from '../../shared/utils/ui';
+import { ReviewWithUserVote, VoteValue } from '../../../core/reviews/reviews.models';
+import { fromNow } from '../../../shared/utils/ui';
 
 type VoteDirection = Exclude<VoteValue, 0>;
 
@@ -28,8 +28,8 @@ type VoteDirection = Exclude<VoteValue, 0>;
     MatTooltipModule,
     RouterModule
   ],
-  templateUrl: './review-card.component.html',
-  styleUrl: './review-card.component.scss',
+  templateUrl: './review-card.html',
+  styleUrl: './review-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReviewCardComponent {

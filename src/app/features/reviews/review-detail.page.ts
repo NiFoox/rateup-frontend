@@ -24,10 +24,10 @@ import { EMPTY, map, distinctUntilChanged, switchMap, catchError } from 'rxjs';
 
 import { ReviewsService } from '../../core/reviews/reviews.service';
 import { Comment, ReviewWithUserVote, VoteValue } from '../../core/reviews/reviews.models';
-import { CommentFormComponent } from './comment-form.component';
-import { CommentListComponent } from './comment-list.component';
+import { CommentFormComponent } from './components/comment-form';
+import { CommentListComponent } from './components/comment-list';
 import { fromNow } from '../../shared/utils/ui';
-import { TokenStorage } from '../../core/auth/token-storage';
+import { TokenStorageService } from '../../core/auth/token-storage.service';
 
 type VoteDirection = Exclude<VoteValue, 0>;
 
@@ -68,6 +68,7 @@ export class ReviewDetailPage {
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly tokenStorage = inject(TokenStorageService);
 
   constructor() {
     this.route.paramMap
@@ -109,7 +110,7 @@ export class ReviewDetailPage {
       return;
     }
 
-    const user = TokenStorage.getUser();
+    const user = this.tokenStorage.getUser();
     if (!user?.id) {
       this.snackBar.open('Necesitas iniciar sesión para votar', 'Cerrar', {
         duration: 3000,

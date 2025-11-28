@@ -20,10 +20,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { Comment } from '../../core/reviews/reviews.models';
-import { ReviewsService } from '../../core/reviews/reviews.service';
-import { TokenStorage } from '../../core/auth/token-storage';
-import { avatarColor, fromNow } from '../../shared/utils/ui';
+import { Comment } from '../../../core/reviews/reviews.models';
+import { ReviewsService } from '../../../core/reviews/reviews.service';
+import { TokenStorageService } from '../../../core/auth/token-storage.service';
+import { avatarColor, fromNow } from '../../../shared/utils/ui';
 
 @Component({
   selector: 'app-comment-list',
@@ -40,8 +40,8 @@ import { avatarColor, fromNow } from '../../shared/utils/ui';
     MatSnackBarModule,
     MatTooltipModule
   ],
-  templateUrl: './comment-list.component.html',
-  styleUrl: './comment-list.component.scss',
+  templateUrl: './comment-list.html',
+  styleUrl: './comment-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CommentListComponent implements OnChanges {
@@ -62,7 +62,9 @@ export class CommentListComponent implements OnChanges {
   protected readonly deletingId = signal<string | null>(null);
   protected readonly relative = fromNow;
   protected readonly colorFor = avatarColor;
-  protected readonly currentUser = TokenStorage.getUser();
+
+  private readonly tokenStorage = inject(TokenStorageService);
+  protected readonly currentUser = this.tokenStorage.getUser();
   protected readonly isAdmin = this.currentUser?.roles?.includes('ADMIN') ?? false;
 
   private readonly reviewsService = inject(ReviewsService);
