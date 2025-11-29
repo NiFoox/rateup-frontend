@@ -13,89 +13,62 @@ import {
   VoteValue
 } from './reviews.models';
 
-interface CommentDto {
-  id: string;
-  reviewId: string;
-  content: string;
-  createdAt: string;
-  updatedAt?: string;
-  user?: { id: string; username: string };
-  userId?: string;
-}
-
-interface ReviewDto {
-  id: string;
-  gameId: string;
-  userId: string;
-  content: string;
-  score: number;
-  createdAt: string;
-  updatedAt?: string;
-  user?: { id: string; username: string; email?: string };
-  game?: { id: string; name: string; genre?: string };
-  voteScore?: number;
-}
-
-interface ReviewWithRelationsDto extends ReviewDto {
-  game: { id: string; name: string; genre: string };
-  user: { id: string; username: string; email?: string };
-}
-
-interface VoteSummaryDto {
-  reviewId: string;
-  upvotes: number;
-  downvotes: number;
-  score: number;
-}
-
-interface CommentsPageDto<T> {
-  page: number;
-  pageSize: number;
-  data?: T[];
-  items?: T[];
-  count?: number;
-  total?: number;
-}
-
-interface ReviewFullDto {
-  reviewId: string;
-  review: ReviewWithRelationsDto;
-  comments: CommentsPageDto<CommentDto>;
-  votes: VoteSummaryDto;
-}
-
-interface TrendingReviewsDto {
-  limit: number;
-  days: number;
-  count: number;
-  items: Array<
-    ReviewWithRelationsDto & {
-      voteScore?: number;
-    }
-  >;
-}
+import {
+  CommentDto,
+  ReviewDto,
+  ReviewWithRelationsDto,
+  VoteSummaryDto,
+  CommentsPageDto,
+  ReviewFullDto
+} from './reviews.dto';
 
 @Injectable({ providedIn: 'root' })
 export class ReviewsService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiBaseUrl}/api/reviews`;
-  private readonly homeUrl = `${environment.apiBaseUrl}/api/home`;
+  // Falta implementar en backend
   private readonly filters$ = new BehaviorSubject<{ tags: string[]; games: string[] }>({
     tags: [],
     games: []
   });
 
+  createReview(body: { gameId: string; content: string; score: number }): Observable<ReviewWithUserVote> {
+    return this.http
+      .post<ReviewDto>(this.apiUrl, {
+        gameId: Number(body.gameId),
+        content: body.content,
+        score: body.score
+      })
+      .pipe(map((dto) => this.mapReview(dto, 0)));
+  }
+
   list(query: ReviewsQuery): Observable<PagedResult<ReviewWithUserVote>> {
     const params = new HttpParams({
       fromObject: {
-        limit: String(query.pageSize ?? 10),
-        days: query.days ? String(query.days) : ''
+        page: String(query.page || 1),
+        pageSize: String(query.pageSize || 10),
+        ...(query.gameId ? { gameId: query.gameId } : {}),
+        ...(query.userId ? { userId: query.userId } : {})
       }
     });
 
     return this.http
-      .get<TrendingReviewsDto>(`${this.homeUrl}/trending-reviews`, { params })
-      .pipe(map((response) => this.mapTrending(response)));
+      .get<PagedResult<ReviewDto>>(this.apiUrl, { params }) 
+      .pipe(map((response) => this.mapPagedReviews(response)));
+  }
+
+  listMine(page = 1, pageSize = 10, gameId?: string): Observable<PagedResult<ReviewWithUserVote>> {
+    const params = new HttpParams({
+      fromObject: {
+        page: String(page),
+        pageSize: String(pageSize),
+        ...(gameId ? { gameId } : {})
+      }
+    });
+
+    return this.http
+      .get<PagedResult<ReviewDto>>(`${this.apiUrl}/me`, { params })
+      .pipe(map((dto) => this.mapPagedReviews(dto)));
   }
 
   getById(id: string): Observable<ReviewWithUserVote> {
@@ -131,9 +104,22 @@ export class ReviewsService {
       .pipe(map((dto) => this.mapVoteSummary(dto)));
   }
 
+  updateReview(
+    id: string,
+    body: { content?: string; score?: number }
+  ): Observable<ReviewWithUserVote> {
+    return this.http
+      .patch<ReviewDto>(`${this.apiUrl}/${id}`, body)
+      .pipe(map((dto) => this.mapReview(dto, 0)));
+  }
+
+  deleteReview(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
   vote(
     reviewId: string,
-    value: VoteValue
+    value: 1 | -1
   ): Observable<{ voteSummary: VoteSummary; userVote: VoteValue }> {
     return this.http
       .put<VoteSummaryDto>(`${this.apiUrl}/${reviewId}/votes`, { value })
@@ -168,10 +154,7 @@ export class ReviewsService {
     return this.http.delete<void>(`${this.apiUrl}/${reviewId}/comments/${commentId}`);
   }
 
-  syncCommentCount(_reviewId: string, _total: number): void {
-    // The backend is the source of truth for counts; no local cache is maintained.
-  }
-
+  // Falta implementar en backend
   getAvailableFilters(): { tags: string[]; games: string[] } {
     const current = this.filters$.value;
     return {
@@ -180,19 +163,13 @@ export class ReviewsService {
     };
   }
 
-  private mapTrending(response: TrendingReviewsDto): PagedResult<ReviewWithUserVote> {
-    const items = response.items.map((item) =>
-      this.mapReview(item, 0, { score: item.voteScore ?? 0, upvotes: 0, downvotes: 0, reviewId: item.id })
-    );
-    const result = {
-      items,
-      total: response.count ?? items.length,
-      page: 1,
-      pageSize: response.limit ?? items.length
-    } satisfies PagedResult<ReviewWithUserVote>;
-
-    this.updateFilters(items);
-    return result;
+  private mapPagedReviews(dto: PagedResult<ReviewDto>): PagedResult<ReviewWithUserVote> {
+    return {
+      data: dto.data.map(item => this.mapReview(item, 0)),
+      total: dto.total ?? 0,
+      page: dto.page,
+      pageSize: dto.pageSize
+    };
   }
 
   private mapCommentsPage(dto: CommentsPageDto<CommentDto>): PagedResult<Comment> {
@@ -200,7 +177,7 @@ export class ReviewsService {
     const total = dto.count ?? dto.total ?? items.length;
 
     return {
-      items,
+      data: items,
       total,
       page: dto.page ?? 1,
       pageSize: dto.pageSize ?? items.length
@@ -212,6 +189,15 @@ export class ReviewsService {
     userVote: VoteValue,
     voteSummary?: VoteSummaryDto
   ): ReviewWithUserVote {
+    const summaryToUse =
+      voteSummary ??
+      dto.votes ?? {
+        reviewId: String(dto.id),
+        upvotes: 0,
+        downvotes: 0,
+        score: 0
+      };
+
     const review: ReviewWithUserVote = {
       id: String(dto.id),
       gameId: String(dto.gameId),
@@ -233,14 +219,7 @@ export class ReviewsService {
             id: String(dto.user.id)
           }
         : undefined,
-      voteSummary: this.mapVoteSummary(
-        voteSummary ?? {
-          reviewId: String(dto.id),
-          upvotes: 0,
-          downvotes: 0,
-          score: dto.voteScore ?? 0
-        }
-      ),
+      voteSummary: this.mapVoteSummary(summaryToUse),
       userVote: this.normalizeVote(userVote)
     } satisfies ReviewWithUserVote;
 
@@ -277,6 +256,7 @@ export class ReviewsService {
     return 0;
   }
 
+  // Falta implementar en backend
   private updateFilters(reviews: Review[]): void {
     const current = this.filters$.value;
     const tags = new Set(current.tags);

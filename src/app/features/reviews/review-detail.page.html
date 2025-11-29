@@ -51,23 +51,19 @@
                 {{ review.score }}/5
               </span>
             </div>
-            <p class="meta">
-              <span class="game">
-                {{ review.game?.name ?? ('Juego ' + review.gameId) }}
-                @if (review.game?.genre) {
-                  <span class="separator" aria-hidden="true">•</span>
-                  <!-- <span class="genre">{{ review.game.genre }}</span> -->
-                }
-              </span>
-              <span class="separator" aria-hidden="true">•</span>
-              <span class="author">por {{ review.user?.username ?? ('Usuario ' + review.userId) }}</span>
-              <span class="separator" aria-hidden="true">•</span>
-              <span class="date">{{ relative(review.createdAt) }}</span>
-              @if (review.updatedAt) {
+              <p class="meta">
+                <span class="game">{{ displayGame(review) }}</span>
                 <span class="separator" aria-hidden="true">•</span>
-                <span class="updated">actualizado {{ relative(review.updatedAt) }}</span>
-              }
-            </p>
+                <span class="author">por {{ displayAuthor(review) }}</span>
+                <span class="separator" aria-hidden="true">•</span>
+                <span class="date">{{ relative(review.createdAt) }}</span>
+                @if (review.updatedAt) {
+                  <span class="separator" aria-hidden="true">•</span>
+                  <span class="updated">
+                    actualizado {{ relative(review.updatedAt) }}
+                  </span>
+                }
+              </p>
           </header>
 
           <mat-divider></mat-divider>

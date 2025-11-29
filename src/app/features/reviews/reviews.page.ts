@@ -28,7 +28,7 @@ import { debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
 import { ReviewWithUserVote, ReviewsQuery, VoteValue } from '../../core/reviews/reviews.models';
 import { ReviewsService } from '../../core/reviews/reviews.service';
 import { TokenStorageService } from '../../core/auth/token-storage.service';
-import { ReviewCardComponent } from './components/review-card';
+import { ReviewCard } from './components/review-card';
 
 type VoteDirection = Exclude<VoteValue, 0>;
 
@@ -51,7 +51,7 @@ type SortOption = 'hot' | 'new' | 'top';
     MatSelectModule,
     MatSnackBarModule,
     MatTooltipModule,
-    ReviewCardComponent
+    ReviewCard
   ],
   templateUrl: './reviews.page.html',
   styleUrl: './reviews.page.scss',
@@ -135,13 +135,18 @@ export class ReviewsPage implements OnDestroy {
     const nextVote: VoteValue = previousVote === direction ? 0 : direction;
     const voteDelta = nextVote - previousVote;
 
+    // Estado optimista
     const optimistic: ReviewWithUserVote = {
       ...previous,
       voteSummary: {
         ...previous.voteSummary,
         score: previous.voteSummary.score + voteDelta,
-        upvotes: previous.voteSummary.upvotes + (nextVote === 1 ? 1 : previousVote === 1 ? -1 : 0),
-        downvotes: previous.voteSummary.downvotes + (nextVote === -1 ? 1 : previousVote === -1 ? -1 : 0)
+        upvotes:
+          previous.voteSummary.upvotes +
+          (nextVote === 1 ? 1 : previousVote === 1 ? -1 : 0),
+        downvotes:
+          previous.voteSummary.downvotes +
+          (nextVote === -1 ? 1 : previousVote === -1 ? -1 : 0)
       },
       userVote: nextVote
     };
@@ -150,27 +155,45 @@ export class ReviewsPage implements OnDestroy {
     optimisticItems[index] = optimistic;
     this.items.set(optimisticItems);
 
-    this.reviewsService.vote(review.id, nextVote).subscribe({
-      next: ({ voteSummary, userVote }) => {
-        const current = this.items();
-        const currentIndex = current.findIndex((item) => item.id === review.id);
-        if (currentIndex === -1) {
-          return;
+    // Llamada al backend según el caso
+    if (nextVote === 0) {
+      // Quitar voto => DELETE
+      this.reviewsService.deleteVote(review.id).subscribe({
+        next: () => {
+          // No hacemos nada: ya tenemos el estado optimista con userVote = 0
+        },
+        error: (error) => {
+          this.items.set(snapshot);
+          const message =
+            error instanceof Error ? error.message : 'No se pudo eliminar el voto';
+          this.snackBar.open(message, 'Cerrar', { duration: 3000 });
         }
-        const merged = [...current];
-        merged[currentIndex] = {
-          ...current[currentIndex],
-          voteSummary,
-          userVote
-        };
-        this.items.set(merged);
-      },
-      error: (error) => {
-        this.items.set(snapshot);
-        const message = error instanceof Error ? error.message : 'No se pudo registrar el voto';
-        this.snackBar.open(message, 'Cerrar', { duration: 3000 });
-      }
-    });
+      });
+    } else {
+      // Crear / actualizar voto (-1 o 1)
+      this.reviewsService.vote(review.id, nextVote).subscribe({
+        next: ({ voteSummary, userVote }) => {
+          const current = this.items();
+          const currentIndex = current.findIndex((item) => item.id === review.id);
+          if (currentIndex === -1) {
+            return;
+          }
+          const merged = [...current];
+          merged[currentIndex] = {
+            ...current[currentIndex],
+            voteSummary,
+            userVote
+          };
+          this.items.set(merged);
+        },
+        error: (error) => {
+          this.items.set(snapshot);
+          const message =
+            error instanceof Error ? error.message : 'No se pudo registrar el voto';
+          this.snackBar.open(message, 'Cerrar', { duration: 3000 });
+        }
+      });
+    }
   }
 
   protected loadNextPage(): void {
@@ -203,7 +226,7 @@ export class ReviewsPage implements OnDestroy {
           sort,
           search: search.trim() ? search.trim() : undefined,
           tag: tag.trim() ? tag.trim() : undefined,
-          game: game.trim() ? game.trim() : undefined
+          gameName: game.trim() ? game.trim() : undefined
         };
         this.page.set(1);
         this.hasMore.set(true);
@@ -223,16 +246,19 @@ export class ReviewsPage implements OnDestroy {
 
     this.currentRequest = this.reviewsService.list(query).subscribe({
       next: (result) => {
-        const merged = append ? [...this.items(), ...result.items] : result.items;
+        const merged = append ? [...this.items(), ...result.data] : result.data;
         this.items.set(merged);
         this.page.set(result.page);
-        const hasMore = result.items.length === result.pageSize;
+
+        const hasMore = result.data.length === result.pageSize;
         this.hasMore.set(hasMore);
         this.loading.set(false);
         this.loadingMore.set(false);
+
         const filters = this.reviewsService.getAvailableFilters();
         this.tags.set(filters.tags);
         this.games.set(filters.games);
+
         if (!hasMore) {
           this.observer?.disconnect();
         } else if (this.sentinel?.nativeElement) {

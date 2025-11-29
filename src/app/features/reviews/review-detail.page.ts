@@ -104,6 +104,23 @@ export class ReviewDetailPage {
       });
   }
 
+  protected displayGame(review: ReviewWithUserVote): string {
+    if (review.game?.name) {
+      return review.game.genre
+        ? `${review.game.name} • ${review.game.genre}`
+        : review.game.name;
+    }
+    return `Juego ${review.gameId}`;
+  }
+
+  protected displayAuthor(review: ReviewWithUserVote): string {
+    return review.user?.username ?? `Usuario ${review.userId}`;
+  }
+
+  protected displayTitle(review: ReviewWithUserVote): string {
+    return review.game?.name ?? `Reseña #${review.id}`;
+  }
+
   protected vote(direction: VoteDirection): void {
     const current = this.review();
     if (!current || this.loadingVote()) {
@@ -123,37 +140,76 @@ export class ReviewDetailPage {
     const nextVote: VoteValue = previousVote === direction ? 0 : direction;
     const voteDelta = nextVote - previousVote;
 
+    // Estado optimista
     const optimistic: ReviewWithUserVote = {
       ...current,
       voteSummary: {
         ...current.voteSummary,
         score: current.voteSummary.score + voteDelta,
-        upvotes: current.voteSummary.upvotes + (nextVote === 1 ? 1 : previousVote === 1 ? -1 : 0),
-        downvotes: current.voteSummary.downvotes + (nextVote === -1 ? 1 : previousVote === -1 ? -1 : 0)
+        upvotes:
+          current.voteSummary.upvotes +
+          (nextVote === 1 ? 1 : previousVote === 1 ? -1 : 0),
+        downvotes:
+          current.voteSummary.downvotes +
+          (nextVote === -1 ? 1 : previousVote === -1 ? -1 : 0)
       },
       userVote: nextVote
     };
+
     this.review.set(optimistic);
     this.loadingVote.set(true);
 
-    this.reviewsService.vote(current.id, nextVote).subscribe({
-      next: ({ voteSummary, userVote }) => {
-        this.review.set({ ...current, voteSummary, userVote });
-        this.loadingVote.set(false);
-      },
-      error: (error) => {
-        this.review.set(current);
-        this.loadingVote.set(false);
-        const message = error instanceof Error ? error.message : 'No se pudo registrar el voto';
-        this.snackBar.open(message, 'Cerrar', { duration: 3000, politeness: 'polite' });
-      }
-    });
+    if (nextVote === 0) {
+      // Quitar voto → DELETE en backend
+      this.reviewsService.deleteVote(current.id).subscribe({
+        next: () => {
+          // El estado optimista ya refleja userVote = 0 y los contadores ajustados
+          this.loadingVote.set(false);
+        },
+        error: (error) => {
+          // Volvemos al estado anterior
+          this.review.set(current);
+          this.loadingVote.set(false);
+          const message =
+            error instanceof Error ? error.message : 'No se pudo eliminar el voto';
+          this.snackBar.open(message, 'Cerrar', {
+            duration: 3000,
+            politeness: 'polite'
+          });
+        }
+      });
+    } else {
+      // Crear / actualizar voto → PUT con -1 o 1
+      this.reviewsService.vote(current.id, nextVote).subscribe({
+        next: ({ voteSummary, userVote }) => {
+          const latest = this.review();
+          if (!latest) {
+            return;
+          }
+          this.review.set({
+            ...latest,
+            voteSummary,
+            userVote
+          });
+          this.loadingVote.set(false);
+        },
+        error: (error) => {
+          this.review.set(current);
+          this.loadingVote.set(false);
+          const message =
+            error instanceof Error ? error.message : 'No se pudo registrar el voto';
+          this.snackBar.open(message, 'Cerrar', {
+            duration: 3000,
+            politeness: 'polite'
+          });
+        }
+      });
+    }
   }
 
   protected onCommentCreated(comment: Comment): void {
     if (this.commentList) {
       this.commentList.prepend(comment);
-      return;
     }
 
     const current = this.review();
@@ -161,22 +217,27 @@ export class ReviewDetailPage {
       return;
     }
 
-    const nextTotal = current.comments + 1;
-    this.review.set({ ...current, comments: nextTotal });
-    this.reviewsService.syncCommentCount(current.id, nextTotal);
+    const nextTotal = (current.comments ?? 0) + 1;
+    this.review.set({
+      ...current,
+      comments: nextTotal
+    });
   }
 
   protected onCommentsChanged(): void {
     const list = this.commentList;
     const total = list?.totalCount();
     const current = this.review();
+
     if (!list || total === undefined || !current) {
       return;
     }
 
     if (current.comments !== total) {
-      this.review.set({ ...current, comments: total });
-      this.reviewsService.syncCommentCount(current.id, total);
+      this.review.set({
+        ...current,
+        comments: total
+      });
     }
   }
 }

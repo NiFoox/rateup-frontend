@@ -32,7 +32,7 @@ type VoteDirection = Exclude<VoteValue, 0>;
   styleUrl: './review-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ReviewCardComponent {
+export class ReviewCard {
   @Input() review?: ReviewWithUserVote;
   @Input() skeleton = false;
   @Output() vote = new EventEmitter<VoteDirection>();

@@ -239,12 +239,12 @@ export class CommentListComponent implements OnChanges {
     this.reviewsService.getComments(this.reviewId, page, this.pageSize).subscribe({
       next: (result) => {
         const nextItems = append
-          ? [...this.comments(), ...result.items]
-          : result.items;
+          ? [...this.comments(), ...result.data]
+          : result.data;
         this.comments.set(nextItems);
         this.page = result.page;
         this.total.set(result.total);
-        const hasMore = result.items.length === result.pageSize;
+        const hasMore = result.data.length === result.pageSize;
         this.hasMore.set(hasMore);
         this.loading.set(false);
         this.loadingMore.set(false);
