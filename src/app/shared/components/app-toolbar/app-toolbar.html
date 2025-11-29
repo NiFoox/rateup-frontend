@@ -15,6 +15,16 @@
 
     <button
       mat-button
+      routerLink="/games"
+      routerLinkActive="active"
+      aria-label="Ir a Juegos"
+    >
+      <mat-icon aria-hidden="true">sports_esports</mat-icon>
+      <span>Juegos</span>
+    </button>
+
+    <button
+      mat-button
       routerLink="/reviews"
       routerLinkActive="active"
       aria-label="Ir a Reseñas"
@@ -26,21 +36,9 @@
     @if (hasRole('ADMIN')) {
       <button
         mat-button
-        routerLink="/games"
-        routerLinkActive="active"
-        aria-label="Ir a Juegos"
-      >
-        <mat-icon aria-hidden="true">sports_esports</mat-icon>
-        <span>Juegos</span>
-      </button>
-    }
-
-    @if (hasRole('ADMIN')) {
-      <button
-        mat-button
         routerLink="/users"
         routerLinkActive="active"
-        aria-label="Ir a Gestión de Usuarios"
+        aria-label="Administrar usuarios"
       >
         <mat-icon aria-hidden="true">group</mat-icon>
         <span>Usuarios</span>
@@ -55,6 +53,15 @@
     >
       <mat-icon aria-hidden="true">person</mat-icon>
       <span>Perfil</span>
+    </button>
+
+    <button
+      mat-icon-button
+      type="button"
+      (click)="logout()"
+      aria-label="Cerrar sesión"
+    >
+      <mat-icon aria-hidden="true">logout</mat-icon>
     </button>
   </mat-toolbar>
 }

@@ -40,4 +40,8 @@ export class AppToolbar {
     // roles are typed as a union of specific literals; cast to string[] to allow dynamic checks
     return (currentUser.roles as string[]).includes(role);
   }
+
+  logout(): void {
+    this.authService.logout();
+  }
 }
