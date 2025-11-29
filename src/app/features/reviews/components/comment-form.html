@@ -1,16 +1,26 @@
-<form class="comment-form" (ngSubmit)="submit()" aria-label="Agregar comentario">
+<form
+  class="comment-form"
+  [formGroup]="form"
+  (ngSubmit)="submit()"
+  aria-label="Agregar comentario"
+  novalidate
+>
   <mat-form-field appearance="outline" class="comment-field">
     <mat-label>Escribe un comentario</mat-label>
     <textarea
       matInput
       rows="4"
-      [formControl]="control"
+      formControlName="content"
       maxlength="2000"
       required
       aria-describedby="comment-helper"
       aria-label="Contenido del comentario"
     ></textarea>
-    <mat-hint id="comment-helper">{{ control.value.length }}/2000</mat-hint>
+
+    <mat-hint id="comment-helper">
+      {{ control.value.length }}/2000
+    </mat-hint>
+
     @if (control.hasError('minlength')) {
       <mat-error>El comentario debe tener al menos 2 caracteres.</mat-error>
     }
@@ -24,7 +34,7 @@
       mat-raised-button
       color="primary"
       type="submit"
-      [disabled]="control.invalid || submitting()"
+      [disabled]="form.invalid || submitting()"
       aria-label="Publicar comentario"
     >
       <mat-icon>send</mat-icon>

@@ -19,6 +19,7 @@ export interface ReviewDto {
   user?: { id: string; username: string; email?: string };
   game?: { id: string; name: string; genre?: string };
   votes?: VoteSummaryDto;
+  comments?: number;
 }
 
 export interface ReviewWithRelationsDto extends ReviewDto {

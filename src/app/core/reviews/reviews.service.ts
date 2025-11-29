@@ -204,7 +204,7 @@ export class ReviewsService {
       userId: String(dto.userId),
       content: dto.content,
       score: dto.score,
-      comments: 0,
+      comments: dto.comments ?? 0,
       createdAt: new Date(dto.createdAt).toISOString(),
       updatedAt: dto.updatedAt ? new Date(dto.updatedAt).toISOString() : undefined,
       game: dto.game

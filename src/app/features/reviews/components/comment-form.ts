@@ -8,7 +8,12 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -39,10 +44,17 @@ export class CommentFormComponent {
   @Input() reviewId = '';
   @Output() created = new EventEmitter<Comment>();
 
+  // Control para el contenido
   protected readonly control = new FormControl('', {
     nonNullable: true,
     validators: [Validators.required, Validators.minLength(2), Validators.maxLength(2000)]
   });
+
+  // FormGroup para usar (ngSubmit)
+  protected readonly form = new FormGroup({
+    content: this.control
+  });
+
   protected readonly submitting = signal(false);
 
   private readonly reviewsService = inject(ReviewsService);
@@ -50,7 +62,7 @@ export class CommentFormComponent {
   private readonly tokenStorage = inject(TokenStorageService);
 
   protected submit(): void {
-    if (this.submitting() || this.control.invalid || !this.reviewId) {
+    if (this.submitting() || this.form.invalid || !this.reviewId) {
       return;
     }
 
@@ -66,7 +78,9 @@ export class CommentFormComponent {
       return;
     }
 
-    const value = this.control.value.trim();
+    const raw = this.control.value; // nonNullable: siempre string
+    const value = raw.trim();
+
     if (value.length < 2) {
       this.snackBar.open('El comentario es demasiado corto', 'Cerrar', {
         duration: 3000,
@@ -80,14 +94,19 @@ export class CommentFormComponent {
       next: (comment) => {
         this.created.emit(comment);
         this.control.setValue('');
-        this.control.markAsPristine();
-        this.control.markAsUntouched();
+        this.form.markAsPristine();
+        this.form.markAsUntouched();
+
         this.submitting.set(false);
       },
       error: (error) => {
         this.submitting.set(false);
-        const message = error instanceof Error ? error.message : 'No se pudo publicar el comentario';
-        this.snackBar.open(message, 'Cerrar', { duration: 3000, politeness: 'polite' });
+        const message =
+          error instanceof Error ? error.message : 'No se pudo publicar el comentario';
+        this.snackBar.open(message, 'Cerrar', {
+          duration: 3000,
+          politeness: 'polite'
+        });
       }
     });
   }
