@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -37,7 +38,32 @@ export class AppToolbar {
       return false;
     }
 
-    // roles are typed as a union of specific literals; cast to string[] to allow dynamic checks
     return (currentUser.roles as string[]).includes(role);
   }
+
+  onLogoutClick(): void {
+    const confirmed = window.confirm('¿Seguro que querés cerrar sesión?');
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.authService.logout();
+  }
 }
+=======
+import { Component } from '@angular/core';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { RouterModule } from '@angular/router';
+
+@Component({
+  selector: 'app-toolbar',
+  standalone: true,
+  imports: [MatToolbarModule, MatIconModule, MatButtonModule, RouterModule],
+  templateUrl: './app-toolbar.html',
+  styleUrls: ['./app-toolbar.scss'],
+})
+export class AppToolbar {}
+>>>>>>> develop

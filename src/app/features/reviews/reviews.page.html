@@ -1,56 +1,62 @@
-<section class="reviews-header" aria-label="Filtros de reseñas">
-  <h1 class="page-title">Reseñas de la comunidad</h1>
+<section class="reviews-header" aria-label="Reseñas de la comunidad">
+  <div class="header-left">
+    <div class="title-block">
+      <h1 class="page-title">
+        <mat-icon aria-hidden="true" class="iconreview" color="primary">rate_review</mat-icon>
+        Reseñas de la comunidad
+      </h1>
+      <p class="page-subtitle">
+        Leé y compartí opiniones sobre tus juegos favoritos.
+      </p>
+    </div>
 
-  <mat-form-field appearance="outline">
-    <mat-label>Buscar</mat-label>
-    <input
-      matInput
-      [formControl]="searchCtrl"
-      placeholder="Título, juego, autor..."
-      aria-label="Buscar reviews"
-    />
-    <button
-      *ngIf="searchCtrl.value"
-      mat-icon-button
-      matSuffix
-      type="button"
-      (click)="searchCtrl.setValue('')"
-      aria-label="Limpiar búsqueda"
-      matTooltip="Limpiar búsqueda"
+    <mat-form-field
+      appearance="outline"
+      class="search-field"
+      floatLabel="auto"
     >
-      <mat-icon>close</mat-icon>
+      <mat-label>Buscar reseñas</mat-label>
+      <input
+        matInput
+        [formControl]="searchCtrl"
+        placeholder="Título, juego o autor..."
+        aria-label="Buscar reseñas"
+      />
+      <button
+        *ngIf="searchCtrl.value"
+        mat-icon-button
+        matSuffix
+        type="button"
+        (click)="searchCtrl.setValue('')"
+        aria-label="Limpiar búsqueda"
+        matTooltip="Limpiar búsqueda"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        matSuffix
+        type="button"
+        aria-label="Buscar"
+        disabled
+      >
+        <mat-icon>search</mat-icon>
+      </button>
+    </mat-form-field>
+  </div>
+
+  <div class="header-right">
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      (click)="onCreateReview()"
+      class="new-review-btn"
+    >
+      <mat-icon>rate_review</mat-icon>
+      <span>Nueva reseña</span>
     </button>
-  </mat-form-field>
-
-  <mat-form-field appearance="outline">
-    <mat-label>Tag</mat-label>
-    <mat-select [formControl]="tagCtrl" aria-label="Filtrar por tag">
-      <mat-option value="">Todos</mat-option>
-      @for (tag of tags(); track tag) {
-        <mat-option [value]="tag">{{ tag }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
-
-  <mat-form-field appearance="outline">
-    <mat-label>Juego</mat-label>
-    <mat-select [formControl]="gameCtrl" aria-label="Filtrar por juego">
-      <mat-option value="">Todos</mat-option>
-      @for (game of games(); track game) {
-        <mat-option [value]="game">{{ game }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
-
-  <mat-button-toggle-group
-    [value]="sort()"
-    (change)="onSortChange($event)"
-    aria-label="Ordenar reseñas"
-  >
-    <mat-button-toggle value="hot">Hot</mat-button-toggle>
-    <mat-button-toggle value="new">Nuevas</mat-button-toggle>
-    <mat-button-toggle value="top">Top</mat-button-toggle>
-  </mat-button-toggle-group>
+  </div>
 </section>
 
 <section class="feed" aria-live="polite">

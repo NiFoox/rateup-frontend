@@ -3,10 +3,26 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
-import { PagedResult, User } from './users.models';
+import { AppRole, PagedResult, PublicUserProfile, User } from './users.models';
 
-type UserCreatePayload = Omit<User, 'id' | 'createdAt'> & { password?: string };
-type UserUpdatePayload = Partial<Omit<User, 'id' | 'createdAt'>>;
+type UserCreatePayload = {
+  username: string;
+  email: string;
+  password: string;
+  roles: AppRole[];
+  isActive: boolean;
+  avatarUrl?: string | null;
+  bio?: string | null;
+};
+
+type UserUpdatePayload = Partial<{
+  username: string;
+  email: string;
+  password: string;
+  isActive: boolean;
+  avatarUrl: string | null;
+  bio: string | null;
+}>;
 
 type UserListParams = {
   page: number;
@@ -15,11 +31,13 @@ type UserListParams = {
 };
 
 interface UserDto {
-  id: string;
+  id: number;
   username: string;
   email: string;
-  roles: string[];
+  roles: AppRole[];
   isActive: boolean;
+  avatarUrl: string | null;
+  bio: string | null;
   createdAt: string;
 }
 
@@ -36,21 +54,30 @@ export class UsersService {
   private readonly apiUrl = `${environment.apiBaseUrl}/api/users`;
 
   list(params: UserListParams): Observable<PagedResult<User>> {
-    const httpParams = new HttpParams({
-      fromObject: {
-        page: params.page,
-        pageSize: params.pageSize,
-        search: params.search ?? ''
-      }
-    });
+    let httpParams = new HttpParams()
+      .set('page', String(params.page))
+      .set('pageSize', String(params.pageSize));
+
+    if (params.search) {
+      httpParams = httpParams.set('search', params.search);
+    }
 
     return this.http
       .get<PagedResultDto<UserDto>>(this.apiUrl, { params: httpParams })
-      .pipe(map((result) => this.mapPagedResult(result, (item) => this.mapUser(item))));
+      .pipe(
+        map((result) => ({
+          data: result.data.map((dto) => this.mapUser(dto)),
+          total: result.total,
+          page: result.page,
+          pageSize: result.pageSize
+        }))
+      );
   }
 
-  get(id: string): Observable<User> {
-    return this.http.get<UserDto>(`${this.apiUrl}/${id}`).pipe(map((dto) => this.mapUser(dto)));
+  getById(id: number): Observable<User> {
+    return this.http
+      .get<UserDto>(`${this.apiUrl}/${id}`)
+      .pipe(map((dto) => this.mapUser(dto)));
   }
 
   create(payload: UserCreatePayload): Observable<User> {
@@ -59,32 +86,30 @@ export class UsersService {
       .pipe(map((dto) => this.mapUser(dto)));
   }
 
-  update(id: string, payload: UserUpdatePayload): Observable<User> {
+  update(id: number, payload: UserUpdatePayload): Observable<User> {
     return this.http
       .patch<UserDto>(`${this.apiUrl}/${id}`, payload)
       .pipe(map((dto) => this.mapUser(dto)));
   }
 
-  remove(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
-  }
-
-  setStatus(id: string, active: boolean): Observable<User> {
+  setStatus(id: number, active: boolean): Observable<User> {
     return this.http
       .patch<UserDto>(`${this.apiUrl}/${id}`, { isActive: active })
       .pipe(map((dto) => this.mapUser(dto)));
   }
 
-  private mapPagedResult<TDto, TModel>(
-    dto: PagedResultDto<TDto>,
-    mapItem: (item: TDto) => TModel
-  ): PagedResult<TModel> {
-    return {
-      data: dto.data.map(mapItem),
-      total: dto.total,
-      page: dto.page,
-      pageSize: dto.pageSize
-    };
+  updateRoles(id: number, roles: AppRole[]): Observable<User> {
+    return this.http
+      .patch<UserDto>(`${this.apiUrl}/${id}/roles`, { roles })
+      .pipe(map((dto) => this.mapUser(dto)));
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  getPublicProfile(id: number): Observable<PublicUserProfile> {
+    return this.http.get<PublicUserProfile>(`${this.apiUrl}/profile/${id}`);
   }
 
   private mapUser(dto: UserDto): User {
@@ -92,8 +117,10 @@ export class UsersService {
       id: dto.id,
       username: dto.username,
       email: dto.email,
-      roles: Array.isArray(dto.roles) ? [...dto.roles] : [],
+      roles: dto.roles,
       isActive: dto.isActive,
+      avatarUrl: dto.avatarUrl,
+      bio: dto.bio,
       createdAt: new Date(dto.createdAt).toISOString()
     } satisfies User;
   }

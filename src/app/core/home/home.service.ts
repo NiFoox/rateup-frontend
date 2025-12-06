@@ -1,10 +1,12 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
+
 import { environment } from '../../../../environments/environment';
 import { ReviewWithUserVote } from '../reviews/reviews.models';
 import { Game } from '../games/game.model';
 
+// DTOs según contrato /home/trending-reviews
 interface TrendingReviewsResponseDto {
   limit: number;
   days: number;
@@ -18,12 +20,16 @@ interface TrendingReviewItemDto {
   score: number;
   createdAt: string;
   voteScore?: number;
+
+  // Campos extra que se podrían implementar en el backend
   voteSummary?: {
     upvotes: number;
     downvotes: number;
     score: number;
   };
   comments?: number;
+  //
+
   user: {
     id: number;
     username: string;
@@ -36,7 +42,7 @@ interface TrendingReviewItemDto {
   };
 }
 
-/** DTOs para top-games según el contrato */
+// DTOs según contrato /home/top-games
 interface TopGamesResponseDto {
   limit: number;
   minReviews: number;
@@ -52,12 +58,24 @@ interface TopGameItemDto {
   reviewCount: number;
 }
 
+// Modelo de uso interno en el front para juegos destacados
+type TopGameWithStats = Game & {
+  avgScore?: number;
+  reviewCount?: number;
+};
+
+interface TopGamesResult {
+  items: TopGameWithStats[];
+  count: number;
+  limit: number;
+  minReviews: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class HomeService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiBaseUrl}/api/home`;
 
-  /** GET /home/trending-reviews */
   getTrendingReviews(limit = 10, days = 7): Observable<ReviewWithUserVote[]> {
     const params = new HttpParams({
       fromObject: {
@@ -84,6 +102,7 @@ export class HomeService {
         reviewId: String(item.id),
         upvotes: item.voteSummary?.upvotes ?? 0,
         downvotes: item.voteSummary?.downvotes ?? 0,
+        // si no viene voteSummary, usamos voteScore; si tampoco, 0
         score: item.voteSummary?.score ?? item.voteScore ?? 0
       },
       comments: item.comments ?? 0,
@@ -97,20 +116,13 @@ export class HomeService {
         username: item.user.username,
         email: item.user.email
       },
+      // El endpoint /home/trending-reviews NO devuelve userVote.
+      // Para la home lo dejamos siempre en 0 (sin voto del usuario actual).
       userVote: 0
     };
   }
 
-  /** GET /home/top-games */
-  getTopGames(
-    limit = 10,
-    minReviews = 1
-  ): Observable<{
-    items: Array<Game & { avgScore?: number; reviewCount?: number }>;
-    count: number;
-    limit: number;
-    minReviews: number;
-  }> {
+  getTopGames(limit = 10, minReviews = 1): Observable<TopGamesResult> {
     const params = new HttpParams({
       fromObject: {
         limit: String(limit),
@@ -125,10 +137,11 @@ export class HomeService {
           limit: response.limit,
           minReviews: response.minReviews,
           count: response.count,
-          items: response.items.map((item) => ({
+          items: response.items.map<TopGameWithStats>((item) => ({
             id: String(item.id),
             name: item.name,
-            // si el Game tiene description setear '' opcionalmente
+            // /home/top-games no devuelve description, así que
+            // la dejamos vacía para no romper el modelo Game.
             description: '',
             genre: item.genre,
             avgScore: item.avgScore,

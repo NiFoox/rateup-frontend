@@ -1,3 +1,191 @@
-<mat-card appearance="outlined">
-  <mat-card-title>Perfil</mat-card-title>
-</mat-card>
+@if (profile(); as user) {
+  <section class="profile-page">
+    <header class="profile-header">
+      <div class="titles">
+        <div class="title-row">
+          <mat-icon class="title-icon">person</mat-icon>
+          <h1>Perfil</h1>
+        </div>
+        <p>Administra tu información y cómo te ve el resto en RateUp.</p>
+      </div>
+    </header>
+
+    <div class="profile-grid">
+      <mat-card class="profile-card" appearance="outlined">
+        <div class="profile-main">
+          <app-user-avatar
+            [username]="user.username"
+            [avatarUrl]="$any(user).avatarUrl"
+            size="large"
+          ></app-user-avatar>
+
+          <div class="profile-main-info">
+            <h2>{{ user.username }}</h2>
+            <p class="email">{{ user.email }}</p>
+
+            <div class="meta">
+              <span class="created-at">
+                <mat-icon inline>event</mat-icon>
+                Cuenta creada:
+                <strong>{{ $any(user).createdAt | date: 'dd/MM/yyyy' }}</strong>
+              </span>
+
+              <span class="roles">
+                <mat-icon inline>verified_user</mat-icon>
+                Roles:
+                @for (role of user.roles; track role) {
+                  <mat-chip color="primary" selected>{{ role }}</mat-chip>
+                }
+              </span>
+            </div>
+
+            <div class="stats">
+              <div class="stat">
+                <span class="label">Reseñas publicadas</span>
+                <span class="value">
+                  {{ $any(user).stats?.reviewsCount ?? 0 }}
+                </span>
+              </div>
+
+              <div class="stat">
+                <span class="label">Reputación</span>
+                <span class="value">
+                  {{ $any(user).stats?.reputation?.score ?? 0 }}
+                </span>
+              </div>
+
+              <div class="stat small">
+                <span class="label">Votos positivos</span>
+                <span class="value">
+                  {{ $any(user).stats?.reputation?.upvotes ?? 0 }}
+                </span>
+              </div>
+
+              <div class="stat small">
+                <span class="label">Votos negativos</span>
+                <span class="value">
+                  {{ $any(user).stats?.reputation?.downvotes ?? 0 }}
+                </span>
+              </div>
+
+              <div class="stat small">
+                <span class="label">% de likes</span>
+                <span class="value">
+                  {{
+                    (($any(user).stats?.reputation?.likesRate ?? 0) * 100)
+                      | number:'1.0-1'
+                  }}%
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="profile-bio">
+          <h3>Bio</h3>
+
+          @if ($any(user).bio) {
+            <p>{{ $any(user).bio }}</p>
+          } @else {
+            <p class="empty">No agregaste una bio todavía.</p>
+          }
+        </div>
+      </mat-card>
+
+      <mat-card class="profile-card" appearance="outlined">
+        <div class="card-header">
+          <h3>Editar perfil</h3>
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="toggleEdit()"
+          >
+            {{ editMode() ? 'Cancelar' : 'Editar' }}
+          </button>
+        </div>
+
+        @if (editMode()) {
+          <form
+            class="profile-form"
+            [formGroup]="form"
+            (ngSubmit)="save()"
+          >
+            <mat-form-field appearance="outline">
+              <mat-label>Nombre de usuario</mat-label>
+              <input matInput formControlName="username" />
+              <mat-error *ngIf="form.controls.username.hasError('required')">
+                El nombre de usuario es obligatorio.
+              </mat-error>
+              <mat-error *ngIf="form.controls.username.hasError('maxlength')">
+                Máximo 50 caracteres.
+              </mat-error>
+              <mat-error *ngIf="form.controls.username.hasError('taken')">
+                Ese nombre de usuario ya está en uso.
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Email</mat-label>
+              <input matInput formControlName="email" />
+              <mat-error *ngIf="form.controls.email.hasError('required')">
+                El email es obligatorio.
+              </mat-error>
+              <mat-error *ngIf="form.controls.email.hasError('email')">
+                Email inválido.
+              </mat-error>
+              <mat-error *ngIf="form.controls.email.hasError('taken')">
+                Ese email ya está en uso.
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>URL de avatar</mat-label>
+              <input matInput formControlName="avatarUrl" />
+              <mat-hint>Por ahora sólo se soporta URL directa a la imagen.</mat-hint>
+              <mat-error *ngIf="form.controls.avatarUrl.hasError('maxlength')">
+                Máximo 255 caracteres.
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Bio</mat-label>
+              <textarea
+                matInput
+                formControlName="bio"
+                rows="4"
+              ></textarea>
+              <mat-hint>Máximo 280 caracteres.</mat-hint>
+              <mat-error *ngIf="form.controls.bio.hasError('maxlength')">
+                Máximo 280 caracteres.
+              </mat-error>
+            </mat-form-field>
+
+            <div class="actions">
+              <button
+                mat-raised-button
+                color="primary"
+                type="submit"
+                [disabled]="loading()"
+              >
+                Guardar cambios
+              </button>
+            </div>
+          </form>
+        } @else {
+          <p class="hint">
+            Usá el botón "Editar" para modificar tu nombre, email, avatar o bio.
+          </p>
+        }
+      </mat-card>
+    </div>
+  </section>
+} @else {
+  <section class="profile-page">
+    <div class="empty-state">
+      <mat-icon>person_off</mat-icon>
+      <p>No se pudo cargar tu perfil. Probá recargar la página o iniciar sesión de nuevo.</p>
+    </div>
+  </section>
+}

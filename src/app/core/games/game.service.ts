@@ -8,7 +8,7 @@ import { Game } from './game.model';
 type GamePayload = Omit<Game, 'id'>;
 
 type GameDto = {
-  id: string;
+  id: number | string;
   name: string;
   description: string;
   genre: string;
@@ -17,57 +17,90 @@ type GameDto = {
 type PaginatedGamesDto = {
   page: number;
   limit: number;
+  total: number;
   data: GameDto[];
 };
 
-export type GamesQuery = {
-  page?: number;
-  limit?: number;
-  search?: string;
-  genre?: string;
-  all?: boolean;
+export type GamesPageResult = {
+  items: Game[];
+  page: number;
+  pageSize: number;
+  total: number;
 };
 
-@Injectable({
-  providedIn: 'root'
-})
+export type GamesListFilters = {
+  search?: string;
+  genre?: string;
+};
+
+@Injectable({ providedIn: 'root' })
 export class GamesService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiBaseUrl}/api/games`;
 
-  list(query: GamesQuery = { all: true }): Observable<{ items: Game[]; page: number; pageSize: number }> {
-    const params = new HttpParams({
-      fromObject: {
-        page: query.page ?? '',
-        limit: query.limit ?? '',
-        search: query.search ?? '',
-        genre: query.genre ?? '',
-        all: query.all === undefined ? '' : String(query.all)
-      }
-    });
+  // Lista todos los juegos
+  listAll(filters?: GamesListFilters): Observable<Game[]> {
+    let params = new HttpParams().set('all', true);
 
-    return this.http.get<GameDto[] | PaginatedGamesDto>(this.apiUrl, { params }).pipe(
-      map((response) => {
-        if (Array.isArray(response)) {
-          const items = response.map((dto) => this.mapGame(dto));
-          return { items, page: 1, pageSize: items.length };
-        }
+    if (filters?.search) {
+      params = params.set('search', filters.search);
+    }
+    if (filters?.genre) {
+      params = params.set('genre', filters.genre);
+    }
 
-        const items = response.data.map((dto) => this.mapGame(dto));
-        return { items, page: response.page, pageSize: response.limit };
-      })
-    );
+    return this.http
+      .get<GameDto[]>(this.apiUrl, { params })
+      .pipe(map((dtos) => dtos.map((dto) => this.mapGame(dto))));
+  }
+
+  //Lista juegos en modo paginado.
+  listPage(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    genre?: string;
+  }): Observable<GamesPageResult> {
+    let httpParams = new HttpParams();
+
+    if (params.page != null) {
+      httpParams = httpParams.set('page', params.page);
+    }
+    if (params.limit != null) {
+      httpParams = httpParams.set('limit', params.limit);
+    }
+    if (params.search) {
+      httpParams = httpParams.set('search', params.search);
+    }
+    if (params.genre) {
+      httpParams = httpParams.set('genre', params.genre);
+    }
+
+    return this.http
+      .get<PaginatedGamesDto>(this.apiUrl, { params: httpParams })
+      .pipe(
+        map((dto) => ({
+          items: dto.data.map((g) => this.mapGame(g)),
+          page: dto.page,
+          pageSize: dto.limit,
+          total: dto.total
+        }))
+      );
   }
 
   getById(id: string): Observable<Game> {
-    return this.http.get<GameDto>(`${this.apiUrl}/${id}`).pipe(map((dto) => this.mapGame(dto)));
+    return this.http
+      .get<GameDto>(`${this.apiUrl}/${id}`)
+      .pipe(map((dto) => this.mapGame(dto)));
   }
 
   create(payload: GamePayload): Observable<Game> {
-    return this.http.post<GameDto>(this.apiUrl, payload).pipe(map((dto) => this.mapGame(dto)));
+    return this.http
+      .post<GameDto>(this.apiUrl, payload)
+      .pipe(map((dto) => this.mapGame(dto)));
   }
 
-  update(id: string, payload: Partial<GamePayload>): Observable<Game> {
+  update(id: string, payload: GamePayload): Observable<Game> {
     return this.http
       .patch<GameDto>(`${this.apiUrl}/${id}`, payload)
       .pipe(map((dto) => this.mapGame(dto)));

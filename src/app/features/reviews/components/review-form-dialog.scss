@@ -1,0 +1,37 @@
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+mat-dialog-content {
+  min-width: 360px;
+  padding-top: 8px;
+
+  mat-form-field {
+    width: 100%;
+  }
+
+  .content-field textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+}
+
+mat-dialog-actions {
+  padding: 12px 24px 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+
+  button[mat-flat-button] {
+    border-radius: 999px;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  mat-dialog-content {
+    min-width: 0;
+  }
+}

@@ -45,27 +45,61 @@
         <div class="content">
           <header class="header">
             <div class="title-row">
-              <h1 class="title">{{ review.game?.name ?? ('Reseña #' + review.id) }}</h1>
-              <span class="rating" [attr.aria-label]="'Calificación ' + review.score + ' sobre 5'">
-                <mat-icon>star</mat-icon>
-                {{ review.score }}/5
-              </span>
+              <div class="title-main">
+                <h1 class="title">
+                  {{ review.game?.name ?? ('Reseña #' + review.id) }}
+                </h1>
+                <span
+                  class="rating"
+                  [attr.aria-label]="'Calificación ' + review.score + ' sobre 5'"
+                >
+                  <mat-icon>star</mat-icon>
+                  {{ review.score }}/5
+                </span>
+              </div>
+
+              @if (canEdit(review) || canDelete(review)) {
+                <div class="review-actions">
+                  @if (canEdit(review)) {
+                    <button
+                      mat-stroked-button
+                      color="primary"
+                      type="button"
+                      (click)="onEditReview(review)"
+                      matTooltip="Editar esta reseña"
+                      class="icon-only-button"
+                    >
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                  }
+
+                  @if (canDelete(review)) {
+                    <button
+                      mat-stroked-button
+                      color="primary"
+                      type="button"
+                      (click)="onDeleteReview(review)"
+                      matTooltip="Eliminar esta reseña"
+                      class="icon-only-button"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  }
+                </div>
+              }
             </div>
+
             <p class="meta">
-              <span class="game">
-                {{ review.game?.name ?? ('Juego ' + review.gameId) }}
-                @if (review.game?.genre) {
-                  <span class="separator" aria-hidden="true">•</span>
-                  <!-- <span class="genre">{{ review.game.genre }}</span> -->
-                }
-              </span>
+              <span class="game">{{ displayGame(review) }}</span>
               <span class="separator" aria-hidden="true">•</span>
-              <span class="author">por {{ review.user?.username ?? ('Usuario ' + review.userId) }}</span>
+              <span class="author">por {{ displayAuthor(review) }}</span>
               <span class="separator" aria-hidden="true">•</span>
               <span class="date">{{ relative(review.createdAt) }}</span>
               @if (review.updatedAt) {
                 <span class="separator" aria-hidden="true">•</span>
-                <span class="updated">actualizado {{ relative(review.updatedAt) }}</span>
+                <span class="updated">
+                  actualizado {{ relative(review.updatedAt) }}
+                </span>
               }
             </p>
           </header>

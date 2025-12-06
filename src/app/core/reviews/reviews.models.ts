@@ -51,16 +51,12 @@ export interface ReviewsQuery {
   page: number;
   pageSize: number;
   gameId?: string;
-  userId?: string;
+  userId?: string; 
   search?: string;
-  tag?: string;
-  game?: string;
-  sort?: 'hot' | 'new' | 'top';
-  days?: number;
 }
 
 export interface PagedResult<T> {
-  items: T[];
+  data: T[];
   total: number;
   page: number;
   pageSize: number;

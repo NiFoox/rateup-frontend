@@ -1,0 +1,34 @@
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &__icon {
+    font-size: 22px;
+  }
+
+  &__text {
+    font-weight: 600;
+  }
+}
+
+.dialog-content {
+  p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+}
+
+.dialog-actions {
+  padding-top: 8px;
+
+  button[mat-flat-button] {
+    border-radius: 999px;
+
+    mat-icon {
+      margin-right: 4px;
+      font-size: 18px;
+    }
+  }
+}

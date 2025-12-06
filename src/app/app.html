@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <div class="app-shell">
   @if (showToolbar()) {
     <app-app-toolbar></app-app-toolbar>
@@ -6,3 +7,26 @@
     <router-outlet></router-outlet>
   </main>
 </div>
+=======
+<mat-toolbar color="primary">
+  <span class="app-title" routerLink="/">🎮 RateUp</span>
+
+  <span class="spacer"></span>
+
+  <button mat-button routerLink="/games" routerLinkActive="active-link" class="toolbar-button">
+    <mat-icon>videogame_asset</mat-icon>
+    <span>Juegos</span>
+  </button>
+
+  <button mat-button routerLink="/reviews/new" routerLinkActive="active-link" class="toolbar-button">
+    <mat-icon>rate_review</mat-icon>
+    <span>Reseñas</span>
+  </button>
+</mat-toolbar>
+
+<main class="main-content">
+  <div class="container">
+    <router-outlet />
+  </div>
+</main>
+>>>>>>> develop

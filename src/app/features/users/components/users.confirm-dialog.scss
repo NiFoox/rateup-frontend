@@ -1,0 +1,14 @@
+mat-dialog-content {
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+mat-dialog-actions {
+  padding: 12px 24px 20px;
+  gap: 8px;
+
+  button[mat-button],
+  button[mat-flat-button] {
+    border-radius: 999px;
+  }
+}

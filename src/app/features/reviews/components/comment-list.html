@@ -1,0 +1,120 @@
+<section class="comment-list" role="list" aria-label="Comentarios de la reseña">
+  @if (loading() && comments().length === 0) {
+    <div class="loading">
+      <mat-progress-spinner mode="indeterminate" diameter="32"></mat-progress-spinner>
+      <span>Cargando comentarios…</span>
+    </div>
+  } @else if (comments().length === 0) {
+    <p class="empty" role="status">Sé el primero en comentar.</p>
+  } @else {
+    @for (comment of comments(); track comment.id; let index = $index) {
+      <article class="comment" role="listitem">
+        <div class="avatar" [style.background-color]="colorFor(comment.authorId)" aria-hidden="true">
+          {{ comment.authorName.slice(0, 2).toUpperCase() }}
+        </div>
+        <div class="content">
+          <header class="header">
+            <div class="meta">
+              <span class="author">{{ comment.authorName }}</span>
+              <span class="separator" aria-hidden="true">•</span>
+              <span class="date">{{ relative(comment.createdAt) }}</span>
+              @if (comment.updatedAt) {
+                <span class="separator" aria-hidden="true">•</span>
+                <span class="edited" matTooltip="Editado">editado</span>
+              }
+            </div>
+            @if (canEdit(comment) || canDelete(comment)) {
+              <div class="actions">
+                @if (editingId() === comment.id) {
+                  <button
+                    mat-button
+                    type="button"
+                    (click)="saveEdit(comment)"
+                    [disabled]="editControl.invalid || savingEdit()"
+                    aria-label="Guardar edición"
+                  >
+                    <mat-icon>save</mat-icon>
+                    Guardar
+                  </button>
+                  <button mat-button type="button" (click)="cancelEdit()" aria-label="Cancelar edición">
+                    <mat-icon>close</mat-icon>
+                    Cancelar
+                  </button>
+                } @else {
+                  @if (canEdit(comment)) {
+                    <button
+                      mat-icon-button
+                      type="button"
+                      (click)="startEdit(comment)"
+                      matTooltip="Editar comentario"
+                      aria-label="Editar comentario"
+                      class="comment-action-button"
+                    >
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                  }
+                  @if (canDelete(comment)) {
+                    <button
+                      mat-icon-button
+                      type="button"
+                      (click)="deleteComment(comment)"
+                      [disabled]="deletingId() === comment.id"
+                      matTooltip="Eliminar comentario"
+                      aria-label="Eliminar comentario"
+                      class="comment-action-button comment-action-button--delete"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  }
+                }
+              </div>
+            }
+          </header>
+
+          @if (editingId() === comment.id) {
+            <mat-form-field appearance="outline" class="edit-field">
+              <mat-label>Editar comentario</mat-label>
+              <textarea
+                matInput
+                rows="3"
+                [formControl]="editControl"
+                maxlength="2000"
+                aria-label="Editar comentario"
+              ></textarea>
+              @if (editControl.hasError('minlength')) {
+                <mat-error>El comentario debe tener al menos 2 caracteres.</mat-error>
+              }
+              @else if (editControl.hasError('maxlength')) {
+                <mat-error>Superaste el máximo de 2000 caracteres.</mat-error>
+              }
+            </mat-form-field>
+          } @else {
+            <p class="body">{{ comment.content }}</p>
+          }
+        </div>
+      </article>
+      @if (index < comments().length - 1) {
+        <mat-divider></mat-divider>
+      }
+    }
+  }
+
+  @if (hasMore()) {
+    <div class="load-more">
+      <button
+        mat-button
+        type="button"
+        (click)="loadMore()"
+        [disabled]="loadingMore()"
+        aria-label="Cargar más comentarios"
+      >
+        <mat-icon>expand_more</mat-icon>
+        @if (loadingMore()) {
+          Cargando…
+        } @else {
+          Cargar más
+        }
+      </button>
+    </div>
+  }
+</section>

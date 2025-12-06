@@ -1,79 +1,157 @@
 <div class="home-wrapper">
-  @if (user(); as currentUser) {
-    <mat-card class="home-card" appearance="outlined">
-      <mat-card-header>
-        <mat-card-title>
-          Hola, {{ currentUser.username }}
-        </mat-card-title>
-        <mat-card-subtitle>
-          {{ currentUser.email }}
-        </mat-card-subtitle>
-      </mat-card-header>
+  @if (isLoggedIn()) {
+    @if (user(); as currentUser) {
+      <section class="hero hero-logged" aria-label="Resumen de tu cuenta">
+        <mat-card class="home-card user-card" appearance="outlined">
+          <mat-card-header>
+            <mat-card-title>Hola, {{ currentUser.username }}</mat-card-title>
+            <mat-card-subtitle>{{ currentUser.email }}</mat-card-subtitle>
+          </mat-card-header>
 
-      <mat-divider></mat-divider>
+          <mat-divider></mat-divider>
 
-      <mat-card-content>
-        <section class="info-section" aria-labelledby="roles-heading">
-          <h3 id="roles-heading">Roles</h3>
-          <div class="roles">
-            @if (currentUser.roles.length) {
-              @for (role of currentUser.roles; track role) {
-                <mat-chip color="primary" selected>{{ role }}</mat-chip>
-              }
-            } @else {
-              <span class="no-roles">Sin roles asignados</span>
-            }
-          </div>
-        </section>
-      </mat-card-content>
-    </mat-card>
+          <mat-card-content>
+            <p class="hint">
+              Bienvenido de nuevo a <strong>RateUp</strong>. Desde aquí podés descubrir juegos,
+              leer reseñas de la comunidad y crear las tuyas.
+            </p>
+
+            <div class="roles" aria-label="Roles del usuario">
+              <span class="label">Roles:</span>
+              <mat-chip-set>
+                @for (role of currentUser.roles; track role) {
+                  <mat-chip>{{ role }}</mat-chip>
+                } @empty {
+                  <mat-chip>USER</mat-chip>
+                }
+              </mat-chip-set>
+            </div>
+          </mat-card-content>
+
+          <mat-card-actions align="end">
+            <button
+              mat-stroked-button
+              color="primary"
+              [routerLink]="['/reviews']"
+              [queryParams]="{ userId: currentUser.id }"
+            >
+              Ver mis reseñas
+            </button>
+
+            <button
+              mat-flat-button
+              color="primary"
+              [routerLink]="['/reviews']"
+            >
+              Explorar reseñas
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </section>
+    }
+  } @else {
+    <section class="hero hero-guest" aria-label="Bienvenida">
+      <mat-card class="home-card" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Bienvenido a RateUp</mat-card-title>
+          <mat-card-subtitle>
+            Descubrí juegos, leé reseñas de la comunidad y compartí tu experiencia.
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-divider></mat-divider>
+
+        <mat-card-content>
+          <p class="hint">
+            Para acceder a todas las funcionalidades necesitás iniciar sesión.
+          </p>
+        </mat-card-content>
+
+        <mat-card-actions align="end">
+          <button mat-flat-button color="primary" [routerLink]="['/login']">
+            Iniciar sesión
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </section>
   }
 
-  <section class="home-section">
-    <header class="section-header">
-      <h2>Juegos destacados</h2>
-      <p>Basados en calificaciones y cantidad de reseñas</p>
-    </header>
+  <section class="content-grid" aria-label="Resumen de actividad">
+    <div class="column">
+      <header class="section-header">
+        <h2>Juegos mejor valorados</h2>
+        <button
+          mat-button
+          color="primary"
+          [routerLink]="['/games']"
+          aria-label="Ver todos los juegos"
+        >
+          Ver todos
+        </button>
+      </header>
 
-    <div class="cards">
-      @for (game of topGames().items; track game.id) {
-        <mat-card appearance="outlined" class="game-card">
-          <mat-card-title>{{ game.name }}</mat-card-title>
-          <mat-card-subtitle>{{ game.genre }}</mat-card-subtitle>
-          <mat-card-content>
-            <p class="description">{{ game.description }}</p>
-            <p class="meta">
-              <strong>Promedio:</strong> {{ game.avgScore ?? '—' }}
-              • <strong>Reseñas:</strong> {{ game.reviewCount ?? 0 }}
-            </p>
-          </mat-card-content>
-        </mat-card>
-      } @empty {
-        <p class="empty">Aún no hay juegos destacados.</p>
+      @if (topGames()!.items.length > 0) {
+        <div class="cards-list">
+          @for (game of topGames()!.items; track game.id; let idx = $index) {
+            <app-top-game-card
+              [game]="game"
+              [index]="idx + 1"
+            />
+          } @empty {
+            <p class="empty">Todavía no hay juegos destacados.</p>
+          }
+        </div>
+      } @else {
+        <p class="empty">Todavía no hay juegos destacados.</p>
       }
     </div>
-  </section>
 
-  <section class="home-section">
-    <header class="section-header">
-      <h2>Reviews con tendencia</h2>
-      <p>Actividad reciente de la comunidad</p>
-    </header>
+    <div class="column">
+      <header class="section-header">
+        <h2>Reviews en tendencia</h2>
+        <button
+          mat-button
+          color="primary"
+          [routerLink]="['/reviews']"
+          aria-label="Ver todas las reviews"
+        >
+          Ver todas
+        </button>
+      </header>
 
-    <div class="cards">
-      @for (review of trendingReviews(); track review.id) {
-        <mat-card appearance="outlined" class="review-card">
-          <mat-card-title>{{ review.game?.name ?? ('Juego ' + review.gameId) }}</mat-card-title>
-          <mat-card-subtitle>Por {{ review.user?.username ?? ('Usuario ' + review.userId) }}</mat-card-subtitle>
-          <mat-card-content>
-            <p class="description">{{ review.content }}</p>
-            <p class="meta">
-              <strong>Score:</strong> {{ review.score }}
-              • <strong>Votos:</strong> {{ review.voteSummary.score }}
-            </p>
-          </mat-card-content>
-        </mat-card>
-      } @empty {
+      @if (trendingReviews()!.length > 0) {
+        <div class="cards-list">
+          @for (review of trendingReviews()!; track review.id) {
+            <mat-card
+              class="review-card"
+              appearance="outlined"
+              [routerLink]="['/reviews', review.id]"
+            >
+              <mat-card-header>
+                <mat-card-title>
+                  {{ review.game?.name ?? ('Juego ' + review.gameId) }}
+                </mat-card-title>
+                <mat-card-subtitle>
+                  por {{ review.user?.username ?? ('Usuario ' + review.userId) }}
+                </mat-card-subtitle>
+              </mat-card-header>
+
+              <mat-card-content>
+                <p class="review-content">
+                  {{ review.content }}
+                </p>
+
+                <p class="review-meta">
+                  <mat-icon aria-hidden="true">star</mat-icon>
+                  {{ review.score }}/5 • Score: {{ review.voteSummary.score }}
+                </p>
+              </mat-card-content>
+            </mat-card>
+          } @empty {
+            <p class="empty">Sin actividad reciente.</p>
+          }
+        </div>
+      } @else {
         <p class="empty">Sin actividad reciente.</p>
       }
     </div>

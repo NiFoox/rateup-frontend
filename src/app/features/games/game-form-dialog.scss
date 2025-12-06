@@ -1,33 +1,36 @@
 :host {
   display: block;
-  padding: 20px;
-  width: 100%;
-  box-sizing: border-box;
 }
 
 h2 {
-  margin: 0 0 20px 0;
-  font-size: 22px;
+  margin: 0;
+  font-size: 20px;
   font-weight: 600;
-  color: #333;
 }
 
-mat-form-field {
+.dialog-form {
+  min-width: 320px;
+  max-width: 520px;
+}
+
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.full-width {
   width: 100%;
-  margin-bottom: 16px;
-
-  ::ng-deep .mat-mdc-text-field-wrapper {
-    border-radius: 8px !important;
-  }
 }
 
-.dialog-actions {
+mat-dialog-actions {
+  padding-top: 16px;
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 20px;
+  gap: 8px;
+}
 
-  button {
-    min-width: 90px;
-  }
+button[mat-flat-button] {
+  font-weight: 600;
 }
