@@ -2,10 +2,51 @@
   position: sticky;
   top: 0;
   z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  background: linear-gradient(
+    135deg,
+    #e0f2fe 10%,
+    #ffffff 40%,
+    #e0f2fe 100%
+  ) !important;
+  color: #111827;
+
+  border-bottom: 1px solid rgba(148, 163, 184, 0.9);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+
+  padding: 0 16px;
+  min-height: 56px;
 }
 
 .brand {
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  
+  .toolbar-logo-text {
+    margin-left: 12px; // Separar el texto del icono
+    position: relative;
+    vertical-align: middle;
+    color: #20aca5;
+    font-size: 20px;
+    font-family: 'Press Start 2P', cursive;
+    top: 2px;
+    
+    text-shadow: 
+    -1px -1px 0 #1e3a8a,
+  }
+}
+
+.toolbar-logo-icon {
+  width: 40px;
+  height: 40px;
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;;
 }
 
 .spacer {
@@ -13,5 +54,43 @@
 }
 
 .active {
-  text-decoration: underline;
+  border-bottom: 2px solid #60a5fa;
+  border-radius: 0px;
+}
+
+.brand.activeHome {
+  border-radius: 14px;
+  padding-inline: 14px 18px;
+  background: linear-gradient(
+    120deg,
+    rgba(252, 244, 174, 0.95),
+    rgba(176, 168, 252, 0.9),
+    rgba(176, 168, 252, 0.9),
+  );
+  box-shadow:
+  0 0 0 2px rgba(255, 215, 35, 0.6),
+  0 4px 6px rgba(15, 23, 42, 0.15);
+  transition:
+    background 120ms ease-out,
+    box-shadow 120ms ease-out,
+    transform 120ms ease-out;
+}
+
+.brand.activeHome:hover {
+  box-shadow:
+    0 0 0 2px rgba(176, 168, 252, 0.9),
+    0 4px 10px rgba(15, 23, 42, 0.15);
+  transform: translateY(-1px);
+}
+
+.brand.activeHome .toolbar-logo-text {
+  color: #f3d421;
+}
+
+.brand.activeHome .toolbar-logo-icon {
+  transform: translateY(0);
+}
+
+.app-toolbar mat-icon {
+  color: inherit;
 }

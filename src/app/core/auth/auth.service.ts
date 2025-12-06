@@ -16,26 +16,16 @@ export class AuthService {
 
   private readonly apiBaseUrl = environment.apiBaseUrl;
 
-  /**
-   * Usuario actual en memoria.
-   * TypeScript lo tipa como AuthUser, pero en runtime también podemos guardar
-   * PrivateUserProfile (que extiende AuthUser) cuando viene de /auth/me.
-   */
-  readonly currentUser$ = new BehaviorSubject<AuthUser | null>(
+  readonly currentUser$ = new BehaviorSubject<PrivateUserProfile | AuthUser | null>(
     this.tokenStorage.getUser()
   );
 
-  /**
-   * Flag para evitar pedir /auth/me más de una vez por sesión.
-   */
+  getCurrentUserSnapshot(): PrivateUserProfile | AuthUser | null {
+    return this.currentUser$.getValue();
+  }
+
   private profileLoaded = false;
 
-  /**
-   * Login contra /auth/login.
-   * - Guarda accessToken en storage (respeta rememberMe).
-   * - Guarda user básico en storage.
-   * - Actualiza currentUser$.
-   */
   login(payload: LoginRequest): Observable<AuthUser> {
     const url = `${this.apiBaseUrl}/api/auth/login`;
 
@@ -56,18 +46,15 @@ export class AuthService {
 
         this.tokenStorage.setTokens(response.accessToken, !!payload.rememberMe);
         this.tokenStorage.setUser(response.user);
+
+        this.profileLoaded = false;
+
         this.currentUser$.next(response.user);
       }),
       map((response) => response.user)
     );
   }
 
-  /**
-   * Cierra sesión en el cliente:
-   * - Limpia tokens y usuario en storage.
-   * - Resetea currentUser$.
-   * - Navega a /login.
-   */
   logout(): void {
     DEBUG && console.debug('[AUTH] logout');
 
@@ -78,17 +65,7 @@ export class AuthService {
     void this.router.navigateByUrl('/login', { replaceUrl: true });
   }
 
-  /**
-   * Devuelve un stream del usuario actual.
-   *
-   * Primera vez:
-   * - Si no hay token válido → emite null.
-   * - Si hay token válido y todavía no cargamos el perfil → hace GET /auth/me.
-   *
-   * Luego:
-   * - Devuelve simplemente currentUser$ como observable.
-   */
-  me(): Observable<AuthUser | null> {
+  me(): Observable<PrivateUserProfile | AuthUser | null> {
     const alreadyLoaded = this.profileLoaded;
     const tokenIsValid = this.tokenStorage.isAuthenticated();
 
@@ -106,41 +83,41 @@ export class AuthService {
 
     if (!alreadyLoaded) {
       this.profileLoaded = true;
-
-      const url = `${this.apiBaseUrl}/api/auth/me`;
-
-      this.http
-        .get<PrivateUserProfile>(url)
-        .pipe(
-          tap((user) => {
-            DEBUG && console.debug('[AUTH] /auth/me success', { user });
-            // Guardamos el perfil completo en storage; el tipo de setUser es AuthUser,
-            // pero PrivateUserProfile extiende AuthUser así que es compatible.
-            this.tokenStorage.setUser(user);
-            this.currentUser$.next(user);
-          }),
-          catchError((error) => {
-            DEBUG && console.debug('[AUTH] /auth/me error', error);
-            this.tokenStorage.clear();
-            this.currentUser$.next(null);
-            return of(null);
-          })
-        )
-        .subscribe();
+      this.refreshProfile().subscribe();
     }
 
     return this.currentUser$.asObservable();
   }
 
-  /**
-   * Actualiza datos del perfil del usuario logueado (username, email, avatarUrl, bio).
-   * Usa PATCH /users/:id y sincroniza:
-   * - currentUser$
-   * - TokenStorageService
-   *
-   * Asumimos que el endpoint devuelve un UserDto con:
-   * { id, username, email, roles, isActive, createdAt, avatarUrl, bio }
-   */
+  refreshProfile(): Observable<PrivateUserProfile | null> {
+    const tokenIsValid = this.tokenStorage.isAuthenticated();
+
+    if (!tokenIsValid) {
+      DEBUG && console.debug('[AUTH] refreshProfile() sin token, limpiando sesión');
+      this.tokenStorage.clear();
+      this.currentUser$.next(null);
+      return of(null);
+    }
+
+    const url = `${this.apiBaseUrl}/api/auth/me`;
+
+    DEBUG && console.debug('[AUTH] refreshProfile() → GET', url);
+
+    return this.http.get<PrivateUserProfile>(url).pipe(
+      tap((user) => {
+        DEBUG && console.debug('[AUTH] refreshProfile success', { user });
+        this.tokenStorage.setUser(user);
+        this.currentUser$.next(user);
+      }),
+      catchError((error) => {
+        DEBUG && console.debug('[AUTH] refreshProfile error', error);
+        this.tokenStorage.clear();
+        this.currentUser$.next(null);
+        return of(null);
+      })
+    );
+  }
+
   updateProfile(payload: {
     username?: string;
     email?: string;

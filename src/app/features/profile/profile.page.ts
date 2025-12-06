@@ -16,7 +16,8 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Observable } from 'rxjs';
+
+import { HttpErrorResponse } from '@angular/common/http';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { PrivateUserProfile } from '../../core/auth/auth.models';
@@ -48,7 +49,7 @@ export class ProfilePage implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
 
   readonly profile = toSignal<PrivateUserProfile | null>(
-    this.authService.me() as Observable<PrivateUserProfile | null>,
+    this.authService.refreshProfile(),
     { initialValue: null }
   );
 
@@ -63,7 +64,7 @@ export class ProfilePage implements OnInit {
   });
 
   ngOnInit(): void {
-    const current = this.profile() as PrivateUserProfile | null;
+    const current = this.profile();
     if (current) {
       this.form.patchValue({
         username: current.username,
@@ -75,7 +76,7 @@ export class ProfilePage implements OnInit {
   }
 
   toggleEdit(): void {
-    const current = this.profile() as PrivateUserProfile | null;
+    const current = this.profile();
     if (!current) return;
 
     if (!this.editMode()) {
@@ -96,7 +97,7 @@ export class ProfilePage implements OnInit {
       return;
     }
 
-    const current = this.profile() as PrivateUserProfile | null;
+    const current = this.profile();
     if (!current) return;
 
     const { username, email, avatarUrl, bio } = this.form.getRawValue();
@@ -126,6 +127,14 @@ export class ProfilePage implements OnInit {
 
     this.loading.set(true);
 
+    // limpiamos errores "taken" anteriores antes de llamar al back
+    this.form.controls.username.setErrors(
+      this.stripTakenError(this.form.controls.username.errors)
+    );
+    this.form.controls.email.setErrors(
+      this.stripTakenError(this.form.controls.email.errors)
+    );
+
     this.authService.updateProfile(payload).subscribe({
       next: () => {
         this.loading.set(false);
@@ -134,12 +143,60 @@ export class ProfilePage implements OnInit {
       },
       error: (error) => {
         this.loading.set(false);
-        const message =
-          error instanceof Error
-            ? error.message
-            : 'No se pudo actualizar el perfil. Intentalo de nuevo.';
+
+        let message =
+          'No se pudo actualizar el perfil. Intentalo de nuevo.';
+
+        if (error instanceof HttpErrorResponse) {
+          const body = error.error;
+
+          const bodyIsObject =
+            body !== null && typeof body === 'object' && !Array.isArray(body);
+
+          const code =
+            bodyIsObject && typeof body.code === 'string'
+              ? (body.code as string)
+              : undefined;
+
+          const field =
+            bodyIsObject && typeof body.field === 'string'
+              ? (body.field as string)
+              : undefined;
+
+          const backendMessage =
+            bodyIsObject && typeof body.message === 'string'
+              ? (body.message as string)
+              : undefined;
+
+          // preferimos siempre el message del backend si viene
+          if (backendMessage) {
+            message = backendMessage;
+          }
+
+          // mapeamos a los form controls según code/field
+          if (code === 'USERNAME_TAKEN' || field === 'username') {
+            this.form.controls.username.setErrors({
+              ...(this.form.controls.username.errors ?? {}),
+              taken: true
+            });
+          } else if (code === 'EMAIL_TAKEN' || field === 'email') {
+            this.form.controls.email.setErrors({
+              ...(this.form.controls.email.errors ?? {}),
+              taken: true
+            });
+          }
+        }
+
         this.snackBar.open(message, 'Cerrar', { duration: 3000 });
       }
     });
+  }
+
+  private stripTakenError(
+    errors: Record<string, unknown> | null
+  ): Record<string, unknown> | null {
+    if (!errors) return null;
+    const { taken, ...rest } = errors;
+    return Object.keys(rest).length ? rest : null;
   }
 }

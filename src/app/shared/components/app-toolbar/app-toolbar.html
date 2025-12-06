@@ -1,14 +1,20 @@
-@if (user()) {
+@if (user(); as currentUser) {
   <mat-toolbar color="primary" class="app-toolbar">
     <button
       class="brand"
       mat-button
       routerLink="/home"
-      routerLinkActive="active"
+      routerLinkActive="activeHome"
       aria-label="Ir a Home"
     >
-      <mat-icon aria-hidden="true">home</mat-icon>
-      <span>RateUp</span>
+      <img
+        src="favicon.ico"
+        alt="RateUp"
+        class="toolbar-logo-icon"
+      />
+      <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+      <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
+      <span class="toolbar-logo-text">RateUp</span>
     </button>
 
     <span class="spacer" aria-hidden="true"></span>
@@ -47,9 +53,9 @@
 
     <button
       mat-button
-      routerLink="/profile"
+      [routerLink]="['/profile', currentUser.id]"
       routerLinkActive="active"
-      aria-label="Ir a Perfil"
+      aria-label="Ir a Perfil público"
     >
       <mat-icon aria-hidden="true">person</mat-icon>
       <span>Perfil</span>
@@ -58,7 +64,7 @@
     <button
       mat-icon-button
       type="button"
-      (click)="logout()"
+      (click)="onLogoutClick()"
       aria-label="Cerrar sesión"
     >
       <mat-icon aria-hidden="true">logout</mat-icon>

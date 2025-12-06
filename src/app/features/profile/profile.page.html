@@ -11,7 +11,6 @@
     </header>
 
     <div class="profile-grid">
-      <!-- Card de información -->
       <mat-card class="profile-card" appearance="outlined">
         <div class="profile-main">
           <app-user-avatar
@@ -95,7 +94,6 @@
         </div>
       </mat-card>
 
-      <!-- Card de edición -->
       <mat-card class="profile-card" appearance="outlined">
         <div class="card-header">
           <h3>Editar perfil</h3>
@@ -123,6 +121,9 @@
               <mat-error *ngIf="form.controls.username.hasError('maxlength')">
                 Máximo 50 caracteres.
               </mat-error>
+              <mat-error *ngIf="form.controls.username.hasError('taken')">
+                Ese nombre de usuario ya está en uso.
+              </mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
@@ -133,6 +134,9 @@
               </mat-error>
               <mat-error *ngIf="form.controls.email.hasError('email')">
                 Email inválido.
+              </mat-error>
+              <mat-error *ngIf="form.controls.email.hasError('taken')">
+                Ese email ya está en uso.
               </mat-error>
             </mat-form-field>
 

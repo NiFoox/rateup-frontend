@@ -37,11 +37,16 @@ export class AppToolbar {
       return false;
     }
 
-    // roles are typed as a union of specific literals; cast to string[] to allow dynamic checks
     return (currentUser.roles as string[]).includes(role);
   }
 
-  logout(): void {
+  onLogoutClick(): void {
+    const confirmed = window.confirm('¿Seguro que querés cerrar sesión?');
+
+    if (!confirmed) {
+      return;
+    }
+
     this.authService.logout();
   }
 }
