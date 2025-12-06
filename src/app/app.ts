@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -11,34 +10,10 @@ import { DEBUG } from './core/debug';
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, AppToolbar],
-=======
-import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
-
-@Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [
-    CommonModule,
-    RouterOutlet,
-    RouterLink,
-    RouterLinkActive,
-    MatToolbarModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule
-  ],
->>>>>>> develop
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
 })
 export class App {
-<<<<<<< HEAD
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   private readonly tokenStorage = inject(TokenStorageService);
@@ -76,7 +51,4 @@ export class App {
     DEBUG && console.debug('[APP] toolbar visibility', { url: this.router.url, hideToolbar: hide });
     return hide;
   }
-=======
-  title = 'RateUp';
->>>>>>> develop
 }
