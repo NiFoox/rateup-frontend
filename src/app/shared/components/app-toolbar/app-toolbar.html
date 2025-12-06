@@ -1,3 +1,78 @@
+<<<<<<< HEAD
+@if (user(); as currentUser) {
+  <mat-toolbar color="primary" class="app-toolbar">
+    <button
+      class="brand"
+      mat-button
+      routerLink="/home"
+      routerLinkActive="activeHome"
+      aria-label="Ir a Home"
+    >
+      <img
+        src="favicon.ico"
+        alt="RateUp"
+        class="toolbar-logo-icon"
+      />
+      <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+      <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
+      <span class="toolbar-logo-text">RateUp</span>
+    </button>
+
+    <span class="spacer" aria-hidden="true"></span>
+
+    <button
+      mat-button
+      routerLink="/games"
+      routerLinkActive="active"
+      aria-label="Ir a Juegos"
+    >
+      <mat-icon aria-hidden="true">sports_esports</mat-icon>
+      <span>Juegos</span>
+    </button>
+
+    <button
+      mat-button
+      routerLink="/reviews"
+      routerLinkActive="active"
+      aria-label="Ir a Reseñas"
+    >
+      <mat-icon aria-hidden="true">rate_review</mat-icon>
+      <span>Reseñas</span>
+    </button>
+
+    @if (hasRole('ADMIN')) {
+      <button
+        mat-button
+        routerLink="/users"
+        routerLinkActive="active"
+        aria-label="Administrar usuarios"
+      >
+        <mat-icon aria-hidden="true">group</mat-icon>
+        <span>Usuarios</span>
+      </button>
+    }
+
+    <button
+      mat-button
+      [routerLink]="['/profile', currentUser.id]"
+      routerLinkActive="active"
+      aria-label="Ir a Perfil público"
+    >
+      <mat-icon aria-hidden="true">person</mat-icon>
+      <span>Perfil</span>
+    </button>
+
+    <button
+      mat-icon-button
+      type="button"
+      (click)="onLogoutClick()"
+      aria-label="Cerrar sesión"
+    >
+      <mat-icon aria-hidden="true">logout</mat-icon>
+    </button>
+  </mat-toolbar>
+}
+=======
 <mat-toolbar color="primary">
   <span class="app-title">
     <mat-icon class="mr-2">sports_esports</mat-icon>
@@ -16,3 +91,4 @@
     Nueva reseña
   </button>
 </mat-toolbar>
+>>>>>>> develop

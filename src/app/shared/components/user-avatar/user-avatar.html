@@ -1,0 +1,7 @@
+<div [class]="cssClass">
+  @if (avatarUrl) {
+    <img [src]="avatarUrl" [alt]="'Avatar de ' + (username ?? 'usuario')" />
+  } @else {
+    <span aria-hidden="true">{{ initials }}</span>
+  }
+</div>

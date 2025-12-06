@@ -1,3 +1,25 @@
+<<<<<<< HEAD
+.app-content {
+:host {
+  display: block;
+  min-height: 100vh;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--mat-sys-surface-container-low);
+}
+=======
 mat-toolbar {
   position: fixed;
   top: 0;
@@ -77,4 +99,5 @@ mat-toolbar {
   .container {
     padding: 16px;
   }
+>>>>>>> develop
 }

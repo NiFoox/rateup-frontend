@@ -1,0 +1,100 @@
+<h1 mat-dialog-title>
+  {{ data.mode === 'create' ? 'Crear usuario' : 'Editar usuario' }}
+</h1>
+
+<div mat-dialog-content>
+  <form [formGroup]="form" class="field-group">
+    <mat-form-field appearance="fill">
+      <mat-label>Nombre de usuario</mat-label>
+      <input matInput formControlName="username" placeholder="Nombre de usuario" />
+      <mat-error *ngIf="form.get('username')?.hasError('required')">
+        El nombre de usuario es obligatorio.
+      </mat-error>
+      <mat-error *ngIf="form.get('username')?.hasError('minlength')">
+        Debe tener al menos 3 caracteres.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Correo electrónico</mat-label>
+      <input matInput formControlName="email" placeholder="correo@ejemplo.com" />
+      <mat-error *ngIf="form.get('email')?.hasError('required')">
+        El correo electrónico es obligatorio.
+      </mat-error>
+      <mat-error *ngIf="form.get('email')?.hasError('email')">
+        Debe ser un correo electrónico válido.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Roles</mat-label>
+      <mat-select formControlName="roles" multiple>
+        <mat-option *ngFor="let role of availableRoles" [value]="role">
+          {{ role }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="form.get('roles')?.hasError('required')">
+        Debés seleccionar al menos un rol.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-slide-toggle formControlName="isActive">
+      Activo
+    </mat-slide-toggle>
+
+    <mat-form-field appearance="fill">
+      <mat-label id="passwordLabel">Contraseña</mat-label>
+      <input
+        matInput
+        type="password"
+        formControlName="password"
+        [required]="data.mode === 'create'"
+        [attr.aria-required]="data.mode === 'create'"
+        aria-labelledby="passwordLabel"
+        placeholder="Contraseña"
+      />
+
+      <mat-error
+        *ngIf="
+          form.get('password')?.hasError('required') &&
+          form.get('password')?.touched &&
+          data.mode === 'create'
+        "
+      >
+        La contraseña es obligatoria.
+      </mat-error>
+
+      <mat-error
+        *ngIf="
+          form.get('password')?.touched &&
+          form.get('password')?.hasError('minlength')
+        "
+      >
+        La contraseña debe tener al menos 8 caracteres.
+      </mat-error>
+
+      <mat-hint *ngIf="data.mode === 'create'">
+        Debe tener al menos 8 caracteres.
+      </mat-hint>
+
+      <mat-hint *ngIf="data.mode === 'edit'">
+        Dejá vacío para mantener la contraseña actual.
+      </mat-hint>
+    </mat-form-field>
+  </form>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="onCancel()">
+    Cancelar
+  </button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    (click)="onSubmit()"
+    [disabled]="form.invalid"
+  >
+    {{ data.mode === 'create' ? 'Crear' : 'Guardar' }}
+  </button>
+</div>

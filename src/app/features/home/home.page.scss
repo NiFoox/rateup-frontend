@@ -1,0 +1,101 @@
+.home-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem 0 3rem;
+  background: linear-gradient(
+    135deg,
+    #ffe81e 0%,
+    #ffffff 35%,
+    #0077ff 100%
+  );
+}
+
+.hero {
+  display: flex;
+  justify-content: center;
+}
+
+.hero-logged .home-card,
+.hero-guest .home-card {
+  width: 100%;
+  max-width: 640px;
+}
+
+.user-card .hint {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.roles {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.roles .label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 20px 5rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.empty {
+  margin: 0.5rem 0 0;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.9rem;
+}
+
+.review-card {
+  cursor: pointer;
+}
+
+.review-content {
+  margin: 0.25rem 0 0.5rem;
+}
+
+.review-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.review-meta mat-icon {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+@media (max-width: 960px) {
+  .content-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,0 +1,71 @@
+<h2 mat-dialog-title>
+  {{ data.mode === 'edit' ? 'Editar juego' : 'Nuevo juego' }}
+</h2>
+
+<form [formGroup]="form" (ngSubmit)="save()" class="dialog-form">
+  <mat-dialog-content>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" />
+      <mat-hint align="start">Nombre visible en las reseñas.</mat-hint>
+      <mat-hint align="end">
+        {{ form.get('name')?.value?.length || 0 }} / 120
+      </mat-hint>
+
+      <mat-error *ngIf="form.get('name')?.hasError('required')">
+        El nombre es obligatorio.
+      </mat-error>
+      <mat-error *ngIf="form.get('name')?.hasError('maxlength')">
+        Máximo 120 caracteres.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Descripción</mat-label>
+      <textarea
+        matInput
+        rows="3"
+        formControlName="description"
+      ></textarea>
+      <mat-hint align="start">Breve descripción del juego.</mat-hint>
+      <mat-hint align="end">
+        {{ form.get('description')?.value?.length || 0 }} / 500
+      </mat-hint>
+
+      <mat-error *ngIf="form.get('description')?.hasError('required')">
+        La descripción es obligatoria.
+      </mat-error>
+      <mat-error *ngIf="form.get('description')?.hasError('maxlength')">
+        Máximo 500 caracteres.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Género</mat-label>
+      <input matInput formControlName="genre" />
+      <mat-hint align="start">Por ejemplo: Acción, RPG, Estrategia.</mat-hint>
+      <mat-hint align="end">
+        {{ form.get('genre')?.value?.length || 0 }} / 60
+      </mat-hint>
+
+      <mat-error *ngIf="form.get('genre')?.hasError('required')">
+        El género es obligatorio.
+      </mat-error>
+      <mat-error *ngIf="form.get('genre')?.hasError('maxlength')">
+        Máximo 60 caracteres.
+      </mat-error>
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cancel()">Cancelar</button>
+    <button
+      mat-flat-button
+      color="primary"
+      type="submit"
+      [disabled]="form.invalid"
+    >
+      Guardar
+    </button>
+  </mat-dialog-actions>
+</form>

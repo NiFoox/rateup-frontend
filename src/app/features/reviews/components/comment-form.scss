@@ -1,0 +1,19 @@
+.comment-form {
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comment-field textarea {
+  resize: vertical;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+button mat-icon {
+  margin-right: 6px;
+}

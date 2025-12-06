@@ -1,0 +1,113 @@
+<section class="games-page">
+  <header class="games-header">
+    <div class="titles">
+      <div class="title-row">
+        <mat-icon class="title-icon">sports_esports</mat-icon>
+        <h1>Juegos</h1>
+      </div>
+      <p>Gestioná el catálogo de juegos disponibles para reseñar.</p>
+    </div>
+
+    <div class="games-filters">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Buscar</mat-label>
+        <input
+          matInput
+          [formControl]="searchCtrl"
+          placeholder="Nombre o descripción"
+          type="search"
+        />
+        <button
+          *ngIf="searchCtrl.value"
+          mat-icon-button
+          matSuffix
+          type="button"
+          aria-label="Limpiar búsqueda"
+          (click)="clearSearch()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+    </div>
+
+    <button mat-flat-button color="primary" type="button" (click)="openCreateDialog()">
+      <mat-icon>add</mat-icon>
+      <span>Nuevo juego</span>
+    </button>
+  </header>
+
+  <mat-card class="games-card">
+    
+
+    <div class="table-container" [class.loading]="loading() || mutating()">
+      <table class="games-table" *ngIf="items().length > 0">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Género</th>
+            <th class="actions-col">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let game of items()">
+            <td class="name-cell">
+              <div class="name-main">{{ game.name }}</div>
+              <div class="name-sub">{{ game.id }}</div>
+            </td>
+            <td
+              class="description-cell"
+              [matTooltip]="game.description"
+              matTooltipPosition="above"
+            >
+              {{ game.description }}
+            </td>
+            <td class="genre-cell">
+              <span class="genre-chip">{{ game.genre }}</span>
+            </td>
+            <td class="actions-col">
+              <button
+                mat-icon-button
+                color="primary"
+                type="button"
+                (click)="openEditDialog(game)"
+                aria-label="Editar juego"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+
+              <button
+                mat-icon-button
+                color="warn"
+                type="button"
+                (click)="confirmDelete(game)"
+                aria-label="Eliminar juego"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="empty-state" *ngIf="!loading() && items().length === 0">
+        <mat-icon>sports_esports</mat-icon>
+        <p>No hay juegos que coincidan con la búsqueda.</p>
+      </div>
+
+      <div class="overlay" *ngIf="loading() || mutating()">
+        <mat-progress-spinner mode="indeterminate" diameter="48" />
+      </div>
+    </div>
+
+    <mat-paginator
+      [length]="total()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[5, 10, 20]"
+      (page)="onPageChange($event)"
+      aria-label="Paginación de juegos"
+    ></mat-paginator>
+  </mat-card>
+</section>

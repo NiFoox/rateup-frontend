@@ -1,0 +1,82 @@
+<section class="reviews-header" aria-label="Reseñas de la comunidad">
+  <div class="header-left">
+    <div class="title-block">
+      <h1 class="page-title">
+        <mat-icon aria-hidden="true" class="iconreview" color="primary">rate_review</mat-icon>
+        Reseñas de la comunidad
+      </h1>
+      <p class="page-subtitle">
+        Leé y compartí opiniones sobre tus juegos favoritos.
+      </p>
+    </div>
+
+    <mat-form-field
+      appearance="outline"
+      class="search-field"
+      floatLabel="auto"
+    >
+      <mat-label>Buscar reseñas</mat-label>
+      <input
+        matInput
+        [formControl]="searchCtrl"
+        placeholder="Título, juego o autor..."
+        aria-label="Buscar reseñas"
+      />
+      <button
+        *ngIf="searchCtrl.value"
+        mat-icon-button
+        matSuffix
+        type="button"
+        (click)="searchCtrl.setValue('')"
+        aria-label="Limpiar búsqueda"
+        matTooltip="Limpiar búsqueda"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        matSuffix
+        type="button"
+        aria-label="Buscar"
+        disabled
+      >
+        <mat-icon>search</mat-icon>
+      </button>
+    </mat-form-field>
+  </div>
+
+  <div class="header-right">
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      (click)="onCreateReview()"
+      class="new-review-btn"
+    >
+      <mat-icon>rate_review</mat-icon>
+      <span>Nueva reseña</span>
+    </button>
+  </div>
+</section>
+
+<section class="feed" aria-live="polite">
+  @if (loading()) {
+    @for (skeleton of skeletons; track skeleton) {
+      <app-review-card [skeleton]="true" />
+    }
+  } @else {
+    @if (items().length === 0) {
+      <p class="empty">No hay resultados</p>
+    } @else {
+      @for (review of items(); track review.id) {
+        <app-review-card [review]="review" (vote)="onVote(review, $event)" />
+      }
+      <div #sentinel class="sentinel" aria-hidden="true"></div>
+      @if (loadingMore()) {
+        <div class="loading-more">
+          <mat-progress-spinner mode="indeterminate" diameter="32"></mat-progress-spinner>
+        </div>
+      }
+    }
+  }
+</section>

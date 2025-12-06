@@ -1,0 +1,38 @@
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+mat-dialog-content {
+  min-width: 360px;
+  padding-top: 8px;
+
+  mat-form-field {
+    width: 100%;
+  }
+
+  mat-slide-toggle {
+    margin-top: 4px;
+  }
+}
+
+mat-dialog-actions {
+  padding: 16px 24px 20px;
+  gap: 8px;
+
+  button[mat-button] {
+    border-radius: 999px;
+  }
+
+  button[mat-flat-button] {
+    border-radius: 999px;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  mat-dialog-content {
+    min-width: 0;
+  }
+}
