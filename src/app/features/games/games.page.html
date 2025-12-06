@@ -8,13 +8,6 @@
       <p>Gestioná el catálogo de juegos disponibles para reseñar.</p>
     </div>
 
-    <button mat-flat-button color="primary" type="button" (click)="openCreateDialog()">
-      <mat-icon>add</mat-icon>
-      <span>Nuevo juego</span>
-    </button>
-  </header>
-
-  <mat-card class="games-card">
     <div class="games-filters">
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>Buscar</mat-label>
@@ -36,6 +29,15 @@
         </button>
       </mat-form-field>
     </div>
+
+    <button mat-flat-button color="primary" type="button" (click)="openCreateDialog()">
+      <mat-icon>add</mat-icon>
+      <span>Nuevo juego</span>
+    </button>
+  </header>
+
+  <mat-card class="games-card">
+    
 
     <div class="table-container" [class.loading]="loading() || mutating()">
       <table class="games-table" *ngIf="items().length > 0">

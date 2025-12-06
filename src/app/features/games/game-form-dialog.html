@@ -4,7 +4,6 @@
 
 <form [formGroup]="form" (ngSubmit)="save()" class="dialog-form">
   <mat-dialog-content>
-    <!-- Nombre -->
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Nombre</mat-label>
       <input matInput formControlName="name" />
@@ -21,7 +20,6 @@
       </mat-error>
     </mat-form-field>
 
-    <!-- Descripción -->
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Descripción</mat-label>
       <textarea
@@ -42,7 +40,6 @@
       </mat-error>
     </mat-form-field>
 
-    <!-- Género -->
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Género</mat-label>
       <input matInput formControlName="genre" />
