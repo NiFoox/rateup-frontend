@@ -29,7 +29,7 @@ export const routes: Routes = [
   {
     path: 'games',
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['ADMIN'] },
+    data: { roles: ['ADMIN', 'USER'] },
     loadComponent: () => import('./features/games/games.page').then((m) => m.GamesPage)
   },
   {
@@ -41,7 +41,16 @@ export const routes: Routes = [
   {
     path: 'profile',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/profile/profile.page').then((m) => m.ProfilePage)
+    loadComponent: () =>
+      import('./features/profile/profile.page').then((m) => m.ProfilePage)
+  },
+  {
+    path: 'profile/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/profile/public-profile.page').then(
+        (m) => m.PublicProfilePage
+      )
   },
   { path: '', pathMatch: 'full', redirectTo: 'home' },
   { path: '**', redirectTo: 'home' }

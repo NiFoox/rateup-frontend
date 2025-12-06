@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Inject, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Inject, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -8,14 +8,20 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
-import { User } from '../../../core/users/users.models';
+import { User, AppRole } from '../../../core/users/users.models';
 
 export interface UserFormDialogData {
   mode: 'create' | 'edit';
   user?: User;
 }
 
-export type UserFormDialogResult = Omit<User, 'id' | 'createdAt'> & { password?: string };
+export type UserFormDialogResult = {
+  username: string;
+  email: string;
+  roles: AppRole[];
+  isActive: boolean;
+  password?: string;
+};
 
 @Component({
   selector: 'app-user-form-dialog',
@@ -34,46 +40,67 @@ export type UserFormDialogResult = Omit<User, 'id' | 'createdAt'> & { password?:
   styleUrl: './users.form-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class UserFormDialogComponent {
+export class UserFormDialogComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
-  private readonly dialogRef = inject(MatDialogRef<UserFormDialogComponent, UserFormDialogResult>);
+  private readonly dialogRef = inject(
+    MatDialogRef<UserFormDialogComponent, UserFormDialogResult | null>
+  );
 
-  readonly data: UserFormDialogData;
-  readonly rolesOptions = ['ADMIN', 'USER'];
+  constructor(@Inject(MAT_DIALOG_DATA) public readonly data: UserFormDialogData) {}
+
+  readonly availableRoles: AppRole[] = ['USER', 'ADMIN'];
 
   readonly form = this.fb.nonNullable.group({
     username: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.email]],
-    roles: this.fb.nonNullable.control<string[]>([], [Validators.required]),
+    roles: this.fb.nonNullable.control<AppRole[]>([], [Validators.required]),
     isActive: this.fb.nonNullable.control(true),
-    password: ['']
+    password: this.fb.control<string | null>(null, [])
   });
 
-  constructor(@Inject(MAT_DIALOG_DATA) data: UserFormDialogData) {
-    this.data = data;
-
-    if (data.mode === 'edit' && data.user) {
+  ngOnInit(): void {
+    if (this.data.mode === 'edit' && this.data.user) {
+      const user = this.data.user;
       this.form.patchValue({
-        username: data.user.username,
-        email: data.user.email,
-        roles: [...data.user.roles],
-        isActive: data.user.isActive
+        username: user.username,
+        email: user.email,
+        roles: user.roles ?? [],
+        isActive: user.isActive ?? true
       });
     }
+
+    // Validaciones de password según modo
+    if (this.data.mode === 'create') {
+      this.form.get('password')?.addValidators([Validators.required, Validators.minLength(8)]);
+    } else {
+      this.form.get('password')?.addValidators([Validators.minLength(8)]);
+    }
+
+    this.form.get('password')?.updateValueAndValidity({ emitEvent: false });
   }
 
-  submit(): void {
+  get isEditMode(): boolean {
+    return this.data.mode === 'edit';
+  }
+
+  onCancel(): void {
+    this.dialogRef.close(null);
+  }
+
+  onSubmit(): void {
+    this.form.markAllAsTouched();
+
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
       return;
     }
 
     const { username, email, roles, isActive, password } = this.form.getRawValue();
+
     const result: UserFormDialogResult = {
       username: username.trim(),
       email: email.trim().toLowerCase(),
-      roles: [...roles],
-      isActive: isActive,
+      roles: [...(roles ?? [])],
+      isActive: !!isActive,
       ...(password ? { password } : {})
     };
 

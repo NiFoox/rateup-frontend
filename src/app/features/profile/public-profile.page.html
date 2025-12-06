@@ -1,0 +1,205 @@
+<section class="profile-page">
+  @if (isLoading()) {
+    <div class="loading-state">
+      <mat-progress-spinner mode="indeterminate" diameter="56"></mat-progress-spinner>
+    </div>
+  } @else if (profile(); as user) {
+    <header class="profile-header">
+      <div class="titles">
+        <div class="title-row">
+          <mat-icon class="title-icon">person</mat-icon>
+          <h1>
+            @if (isOwnProfile()) {
+              Mi perfil público
+            } @else {
+              Perfil de {{ user.username }}
+            }
+          </h1>
+        </div>
+        <p>
+          @if (isOwnProfile()) {
+            Esta es la vista pública de tu perfil en RateUp.
+          } @else {
+            Vista pública del perfil de {{ user.username }}.
+          }
+        </p>
+      </div>
+
+      @if (isOwnProfile()) {
+        <div class="actions">
+          <button
+            matButton="outlined"
+            (click)="onEditProfile()"
+          >
+            <mat-icon>manage_accounts</mat-icon>
+            Perfil privado
+          </button>
+        </div>
+      }
+    </header>
+
+    <div class="profile-grid">
+      <!-- Card principal: avatar, nombre, bio, stats -->
+      <mat-card class="profile-card" appearance="outlined">
+        <div class="profile-main">
+          <app-user-avatar
+            [username]="user.username"
+            [avatarUrl]="user.avatarUrl"
+            size="large"
+          ></app-user-avatar>
+
+          <div class="profile-info">
+            <h2>{{ user.username }}</h2>
+            <p class="profile-joined">
+              Miembro desde
+              <strong>{{ user.createdAt | date: 'longDate' }}</strong>
+            </p>
+          </div>
+        </div>
+
+        <section class="profile-bio-section">
+          @if (user.bio) {
+            <p class="profile-bio">
+              {{ user.bio }}
+            </p>
+          } @else {
+            <p class="profile-bio empty-bio">
+              Este usuario todavía no escribió una biografía.
+            </p>
+          }
+        </section>
+
+        <mat-divider></mat-divider>
+
+        <section class="profile-stats">
+          <div class="stat-card">
+            <div class="stat-header">
+              <mat-icon class="stat-icon reviews">rate_review</mat-icon>
+              <span class="label">Reseñas</span>
+            </div>
+            <div class="stat-value">
+              {{ user.stats.reviewsCount }}
+            </div>
+            <div class="stat-subtitle">
+              Total de reseñas publicadas
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <mat-icon class="stat-icon reputation">military_tech</mat-icon>
+              <span class="label">Reputación</span>
+            </div>
+            <div
+              class="stat-value"
+              [class.negative]="user.stats.reputation.score < 0"
+            >
+              {{ user.stats.reputation.score }}
+            </div>
+            <div class="stat-subtitle hint">
+                <span class="rep-detail">
+                    <mat-icon class="rep-icon up">arrow_upward</mat-icon>
+                    {{ user.stats.reputation.upvotes }}
+                </span>
+
+                <span class="separator">·</span>
+
+                <span class="rep-detail">
+                    <mat-icon class="rep-icon down">arrow_downward</mat-icon>
+                    {{ user.stats.reputation.downvotes }}
+                </span>
+            </div>
+          </div>
+        </section>
+      </mat-card>
+
+      <!-- Segunda card: reseñas del usuario -->
+      <mat-card class="profile-reviews-card" appearance="outlined">
+        <header class="section-header">
+          <h3>
+            @if (isOwnProfile()) {
+              Mis reseñas
+            } @else {
+              Reseñas de {{ user.username }}
+            }
+          </h3>
+        </header>
+
+        <section class="profile-reviews">
+          @if (isLoadingReviews()) {
+            <div class="reviews-loading">
+              <mat-progress-spinner mode="indeterminate" diameter="32"></mat-progress-spinner>
+            </div>
+          } @else if (reviews().length > 0) {
+            <div class="reviews-list">
+              @for (review of reviews(); track review.id) {
+                <article
+                  class="review-card"
+                  (click)="onReviewClick(review.id)"
+                  tabindex="0"
+                  (keydown.enter)="onReviewClick(review.id)"
+                >
+                  <header class="review-header">
+                    <h4 class="review-game">
+                      {{ review.gameName }}
+                    </h4>
+                    <span
+                      class="review-score"
+                      [attr.aria-label]="'Puntuación ' + review.score + ' sobre 5'"
+                    >
+                      <mat-icon class="review-score-icon">star</mat-icon>
+                      {{ review.score }}/5
+                    </span>
+                  </header>
+                  <p class="review-content">
+                    {{ review.content }}
+                  </p>
+                  <footer class="review-footer">
+                    <span class="review-date">
+                      {{ review.createdAt | date: 'shortDate' }}
+                    </span>
+                  </footer>
+                </article>
+              }
+            </div>
+          } @else {
+            <div class="reviews-empty">
+              @if (isOwnProfile()) {
+                <p>Todavía no publicaste reseñas.</p>
+              } @else {
+                <p>Este usuario todavía no publicó reseñas.</p>
+              }
+            </div>
+          }
+        </section>
+
+        @if (user.stats.reviewsCount > 0) {
+          <footer class="profile-reviews-footer">
+            <button
+              mat-stroked-button
+              color="primary"
+              [routerLink]="['/reviews']"
+              [queryParams]="{ userId: user.id }"
+              class="profile-reviews-view-all"
+              matTooltip="Ver todas las reseñas de este usuario"
+            >
+              <mat-icon aria-hidden="true">list</mat-icon>
+              <span>
+                @if (isOwnProfile()) {
+                  Ver todas mis reseñas
+                } @else {
+                  Ver todas las reseñas de este usuario
+                }
+              </span>
+            </button>
+          </footer>
+        }
+      </mat-card>
+    </div>
+  } @else {
+    <div class="empty-state">
+      <mat-icon>person_off</mat-icon>
+      <p>No se pudo cargar este perfil.</p>
+    </div>
+  }
+</section>
