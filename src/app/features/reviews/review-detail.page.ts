@@ -17,10 +17,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EMPTY, map, distinctUntilChanged, switchMap, catchError } from 'rxjs';
+import { EMPTY, map, distinctUntilChanged, switchMap, catchError, filter } from 'rxjs';
 
 import { ReviewsService } from '../../core/reviews/reviews.service';
 import { Comment, ReviewWithUserVote, VoteValue } from '../../core/reviews/reviews.models';
@@ -28,6 +29,15 @@ import { CommentFormComponent } from './components/comment-form';
 import { CommentListComponent } from './components/comment-list';
 import { fromNow } from '../../shared/utils/ui';
 import { TokenStorageService } from '../../core/auth/token-storage.service';
+import {
+  ReviewFormDialogComponent,
+  ReviewFormDialogData,
+  ReviewFormDialogResult
+} from './components/review-form-dialog';
+import {
+  ReviewsConfirmDialogComponent,
+  ReviewsConfirmDialogData
+} from './components/reviews.confirm-dialog';
 
 type VoteDirection = Exclude<VoteValue, 0>;
 
@@ -48,6 +58,7 @@ type VoteDirection = Exclude<VoteValue, 0>;
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatTooltipModule,
+    MatDialogModule,
     CommentFormComponent,
     CommentListComponent
   ],
@@ -67,6 +78,7 @@ export class ReviewDetailPage {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
   private readonly tokenStorage = inject(TokenStorageService);
 
@@ -107,8 +119,13 @@ export class ReviewDetailPage {
   protected displayGame(review: ReviewWithUserVote): string {
     if (review.game?.name) {
       return review.game.genre
+        ? `${review.game.genre}`
+        : review.game.name;
+      /*
+      return review.game.genre
         ? `${review.game.name} • ${review.game.genre}`
         : review.game.name;
+      */
     }
     return `Juego ${review.gameId}`;
   }
@@ -119,6 +136,135 @@ export class ReviewDetailPage {
 
   protected displayTitle(review: ReviewWithUserVote): string {
     return review.game?.name ?? `Reseña #${review.id}`;
+  }
+
+  protected canEdit(review: ReviewWithUserVote | null): boolean {
+    if (!review) {
+      return false;
+    }
+
+    const user = this.tokenStorage.getUser();
+    if (!user) {
+      return false;
+    }
+
+    // id del usuario logueado
+    const currentUserId = String((user as any).id);
+
+    // id del dueño de la reseña (preferimos el user anidado)
+    const ownerId = String(review.user?.id ?? review.userId);
+      
+    // Dueño de la reseña
+    return currentUserId === ownerId;
+  }
+
+  protected canDelete(review: ReviewWithUserVote | null): boolean {
+    if (!review) {
+      return false;
+    }
+
+    const user = this.tokenStorage.getUser();
+    if (!user) {
+      return false;
+    }
+
+    const currentUserId = String((user as any).id);
+    const ownerId = String(review.user?.id ?? review.userId);
+    const roles: string[] = Array.isArray((user as any).roles)
+      ? (user as any).roles
+      : [];
+
+    // Puede borrar: dueño o ADMIN
+    return currentUserId === ownerId || roles.includes('ADMIN');
+  }
+
+  protected onEditReview(review: ReviewWithUserVote): void {
+    const dialogRef = this.dialog.open<
+      ReviewFormDialogComponent,
+      ReviewFormDialogData,
+      ReviewFormDialogResult | null
+    >(ReviewFormDialogComponent, {
+      width: '480px',
+      data: {
+        mode: 'edit',
+        review
+      }
+    });
+
+    dialogRef
+      .afterClosed()
+      .pipe(
+        filter((result): result is ReviewFormDialogResult => !!result),
+        // 1) actualizamos en el backend
+        switchMap((result) =>
+          this.reviewsService.updateReview(review.id, {
+            content: result.content,
+            score: result.score
+          })
+        ),
+        // 2) volvemos a pedir el full detalle para tener game/user completos
+        switchMap(() => this.reviewsService.getFull(review.id))
+      )
+      .subscribe({
+        next: (full) => {
+          this.review.set(full.review);
+          this.snackBar.open('Reseña actualizada correctamente.', 'Cerrar', {
+            duration: 3000,
+            politeness: 'polite'
+          });
+        },
+        error: (error) => {
+          console.error('[REVIEW DETAIL] update error', error);
+          this.snackBar.open('No se pudo actualizar la reseña. Intentá nuevamente.', 'Cerrar', {
+            duration: 4000,
+            politeness: 'polite'
+          });
+        }
+      });
+  }
+
+  protected onDeleteReview(review: ReviewWithUserVote): void {
+    const dialogRef = this.dialog.open<
+      ReviewsConfirmDialogComponent,
+      ReviewsConfirmDialogData,
+      boolean
+    >(ReviewsConfirmDialogComponent, {
+      width: '420px',
+      data: {
+        title: 'Eliminar reseña',
+        message:
+          '¿Estás seguro de que querés eliminar esta reseña? Esta acción no se puede deshacer.',
+        confirmLabel: 'Eliminar reseña',
+        cancelLabel: 'Cancelar'
+      }
+    });
+
+    dialogRef
+      .afterClosed()
+      .pipe(
+        filter((confirmed) => confirmed === true),
+        switchMap(() => this.reviewsService.deleteReview(review.id))
+      )
+      .subscribe({
+        next: () => {
+          this.snackBar.open('Reseña eliminada correctamente.', 'Cerrar', {
+            duration: 3000,
+            politeness: 'polite'
+          });
+          void this.router.navigate(['/reviews']);
+        },
+        error: (error) => {
+          console.error('[REVIEW DETAIL] delete error', error);
+          const message =
+            error instanceof Error
+              ? error.message
+              : 'No se pudo eliminar la reseña. Intentá nuevamente.';
+          this.snackBar.open(message, 'Cerrar', {
+            duration: 4000,
+            politeness: 'polite'
+          });
+        }
+      });
   }
 
   protected vote(direction: VoteDirection): void {

@@ -1,0 +1,31 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon color="warn" class="dialog-title__icon">warning</mat-icon>
+  <span class="dialog-title__text">
+    {{ data.title || 'Eliminar reseña' }}
+  </span>
+</h2>
+
+<div mat-dialog-content class="dialog-content">
+  <p>
+    {{
+      data.message
+        || '¿Estás seguro de que querés eliminar esta reseña? Esta acción no se puede deshacer.'
+    }}
+  </p>
+</div>
+
+<div mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-button type="button" (click)="onCancel()">
+    {{ data.cancelLabel || 'Cancelar' }}
+  </button>
+
+  <button
+    mat-flat-button
+    color="warn"
+    type="button"
+    (click)="onConfirm()"
+  >
+    <mat-icon>delete</mat-icon>
+    <span>{{ data.confirmLabel || 'Eliminar reseña' }}</span>
+  </button>
+</div>

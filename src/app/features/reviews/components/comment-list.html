@@ -48,6 +48,7 @@
                       (click)="startEdit(comment)"
                       matTooltip="Editar comentario"
                       aria-label="Editar comentario"
+                      class="comment-action-button"
                     >
                       <mat-icon>edit</mat-icon>
                     </button>
@@ -56,11 +57,11 @@
                     <button
                       mat-icon-button
                       type="button"
-                      color="warn"
                       (click)="deleteComment(comment)"
                       [disabled]="deletingId() === comment.id"
                       matTooltip="Eliminar comentario"
                       aria-label="Eliminar comentario"
+                      class="comment-action-button comment-action-button--delete"
                     >
                       <mat-icon>delete</mat-icon>
                     </button>

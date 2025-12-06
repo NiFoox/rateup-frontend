@@ -51,13 +51,8 @@ export interface ReviewsQuery {
   page: number;
   pageSize: number;
   gameId?: string;
-  userId?: string;
-  // Falta implementar en el backend
+  userId?: string; 
   search?: string;
-  tag?: string;
-  gameName?: string; 
-  sort?: 'hot' | 'new' | 'top';
-  days?: number;
 }
 
 export interface PagedResult<T> {

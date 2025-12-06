@@ -23,6 +23,40 @@
   gap: 12px;
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  .comment-action-button {
+    color: #fbb32d;
+    border-radius: 999px;
+
+    mat-icon {
+      font-size: 18px;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background-color: rgba(251, 192, 45, 0.12);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      background-color: transparent;
+    }
+  }
+
+  .comment-action-button--delete {
+    color: #fbb32d;
+
+    &:hover,
+    &:focus-visible {
+      background-color: rgba(249, 168, 37, 0.16);
+    }
+  }
+}
+
 .avatar {
   width: 40px;
   height: 40px;

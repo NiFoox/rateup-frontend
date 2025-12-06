@@ -1,11 +1,21 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  padding: 24px 0 48px; 
+  background: radial-gradient(circle,rgb(252, 252, 252) 60%, rgb(136, 191, 255) 100%);
+}
+
 .detail-page {
   display: flex;
   flex-direction: column;
-  margin: 24px;
-  padding-bottom: 40px;
   gap: 24px;
+
+  margin: 24px auto;
+  padding: 0 16px 40px;
+  max-width: 900px;
 }
 
+/* Link Volver */
 .back-link {
   align-self: flex-start;
 }
@@ -14,11 +24,15 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  color: var(--mat-sys-on-surface-variant);
+  color: #6b7280;
 }
 
 .review-card {
   padding: 24px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.14);
 }
 
 .card-layout {
@@ -36,7 +50,7 @@
 }
 
 .vote-button.active {
-  color: var(--mat-sys-primary);
+  color: #2563eb;
 }
 
 .score {
@@ -54,7 +68,15 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
 }
 
 .title {
@@ -68,7 +90,11 @@
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  color: var(--mat-sys-primary);
+  color: #f59e0b;
+
+  mat-icon {
+    font-size: 20px;
+  }
 }
 
 .meta {
@@ -77,7 +103,7 @@
   flex-wrap: wrap;
   gap: 8px;
   font-size: 0.95rem;
-  color: var(--mat-sys-on-surface-variant);
+  color: #6b7280;
 }
 
 .tags {
@@ -89,7 +115,34 @@
 .body {
   white-space: pre-wrap;
   line-height: 1.6;
-  color: var(--mat-sys-on-surface);
+  color: #111827;
+}
+
+.review-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  button[mat-stroked-button] {
+    border-radius: 8px;
+    padding-inline: 15px;
+    font-weight: 500;
+
+    mat-icon {
+      margin-right: 4px;
+      margin-left: 0;
+      font-size: 18px;
+    }
+
+    &.icon-only-button {
+      min-width: 0;
+      padding-inline: 10px;
+
+      mat-icon {
+        margin-right: 0;
+      }
+    }
+  }
 }
 
 .comments {
@@ -110,6 +163,11 @@
 }
 
 @media (max-width: 720px) {
+  .detail-page {
+    margin: 16px auto;
+    padding: 0 12px 32px;
+  }
+
   .review-card {
     padding: 16px;
   }
@@ -121,5 +179,14 @@
 
   .title {
     font-size: 1.5rem;
+  }
+
+  .title-row {
+    align-items: flex-start;
+  }
+
+  .review-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 }

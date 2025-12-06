@@ -1,0 +1,72 @@
+<h1 mat-dialog-title>
+  {{ data.mode === 'create' ? 'Crear reseña' : 'Editar reseña' }}
+</h1>
+
+<div mat-dialog-content>
+  <form [formGroup]="form" class="review-form">
+    <mat-form-field appearance="fill">
+      <mat-label>Juego</mat-label>
+      <mat-select formControlName="gameId" [disabled]="data.mode === 'edit'">
+        <mat-option value="">Seleccioná un juego</mat-option>
+        <mat-option *ngFor="let game of games()" [value]="game.id">
+          {{ game.name }}
+        </mat-option>
+      </mat-select>
+
+      <mat-hint *ngIf="loadingGames()">Cargando juegos...</mat-hint>
+
+      <mat-error *ngIf="form.get('gameId')?.hasError('required')">
+        Debés seleccionar un juego.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Puntuación</mat-label>
+      <mat-select formControlName="score">
+        <mat-option *ngFor="let value of [1, 2, 3, 4, 5]" [value]="value">
+          {{ value }} / 5
+        </mat-option>
+      </mat-select>
+
+      <mat-error *ngIf="form.get('score')?.hasError('required')">
+        La puntuación es obligatoria.
+      </mat-error>
+      <mat-error *ngIf="form.get('score')?.hasError('min') || form.get('score')?.hasError('max')">
+        La puntuación debe estar entre 1 y 5.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="content-field">
+      <mat-label>Reseña</mat-label>
+      <textarea
+        matInput
+        rows="5"
+        formControlName="content"
+        placeholder="Escribí tu opinión sobre el juego"
+      ></textarea>
+
+      <mat-error *ngIf="form.get('content')?.hasError('required')">
+        El contenido de la reseña es obligatorio.
+      </mat-error>
+      <mat-error *ngIf="form.get('content')?.hasError('minlength')">
+        La reseña es demasiado corta.
+      </mat-error>
+    </mat-form-field>
+  </form>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="onCancel()">
+    Cancelar
+  </button>
+
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    (click)="onSubmit()"
+    [disabled]="form.invalid"
+  >
+    {{ data.mode === 'create' ? 'Crear' : 'Guardar' }}
+  </button>
+</div>

@@ -20,6 +20,7 @@ export interface ReviewDto {
   game?: { id: string; name: string; genre?: string };
   votes?: VoteSummaryDto;
   comments?: number;
+  userVote?: number | null;
 }
 
 export interface ReviewWithRelationsDto extends ReviewDto {
@@ -32,6 +33,7 @@ export interface VoteSummaryDto {
   upvotes: number;
   downvotes: number;
   score: number;
+  // userVote?: number | null;
 }
 
 export interface CommentsPageDto<T> {
@@ -48,4 +50,5 @@ export interface ReviewFullDto {
   review: ReviewWithRelationsDto;
   comments: CommentsPageDto<CommentDto>;
   votes: VoteSummaryDto;
+  userVote?: number | null;
 }

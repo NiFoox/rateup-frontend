@@ -26,11 +26,6 @@ import {
 export class ReviewsService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiBaseUrl}/api/reviews`;
-  // Falta implementar en backend
-  private readonly filters$ = new BehaviorSubject<{ tags: string[]; games: string[] }>({
-    tags: [],
-    games: []
-  });
 
   createReview(body: { gameId: string; content: string; score: number }): Observable<ReviewWithUserVote> {
     return this.http
@@ -48,7 +43,8 @@ export class ReviewsService {
         page: String(query.page || 1),
         pageSize: String(query.pageSize || 10),
         ...(query.gameId ? { gameId: query.gameId } : {}),
-        ...(query.userId ? { userId: query.userId } : {})
+        ...(query.userId ? { userId: query.userId } : {}),
+        ...(query.search ? { search: query.search } : {}),
       }
     });
 
@@ -57,12 +53,13 @@ export class ReviewsService {
       .pipe(map((response) => this.mapPagedReviews(response)));
   }
 
-  listMine(page = 1, pageSize = 10, gameId?: string): Observable<PagedResult<ReviewWithUserVote>> {
+  listMine(query: ReviewsQuery): Observable<PagedResult<ReviewWithUserVote>> {
     const params = new HttpParams({
       fromObject: {
-        page: String(page),
-        pageSize: String(pageSize),
-        ...(gameId ? { gameId } : {})
+        page: String(query.page || 1),
+        pageSize: String(query.pageSize || 10),
+        ...(query.gameId ? { gameId: query.gameId } : {}),
+        ...(query.search ? { search: query.search } : {})
       }
     });
 
@@ -74,7 +71,7 @@ export class ReviewsService {
   getById(id: string): Observable<ReviewWithUserVote> {
     return this.http
       .get<ReviewWithRelationsDto>(`${this.apiUrl}/${id}/details`)
-      .pipe(map((dto) => this.mapReview(dto, 0)));
+      .pipe(map((dto) => this.mapReview(dto, this.normalizeVote((dto.userVote ?? 0) as VoteValue))));
   }
 
   getFull(id: string, commentsPage = 1, commentsPageSize = 10): Observable<{
@@ -90,7 +87,7 @@ export class ReviewsService {
 
     return this.http.get<ReviewFullDto>(`${this.apiUrl}/${id}/full`, { params }).pipe(
       map((dto) => {
-        const review = this.mapReview(dto.review, 0, dto.votes);
+        const review = this.mapReview(dto.review, this.normalizeVote((dto.userVote ?? 0) as VoteValue), dto.votes);
         const comments = this.mapCommentsPage(dto.comments);
         review.comments = comments.total;
         return { review, comments };
@@ -122,7 +119,7 @@ export class ReviewsService {
     value: 1 | -1
   ): Observable<{ voteSummary: VoteSummary; userVote: VoteValue }> {
     return this.http
-      .put<VoteSummaryDto>(`${this.apiUrl}/${reviewId}/votes`, { value })
+      .post<VoteSummaryDto>(`${this.apiUrl}/${reviewId}/votes`, { value })
       .pipe(map((dto) => ({ voteSummary: this.mapVoteSummary(dto), userVote: value })));
   }
 
@@ -154,19 +151,14 @@ export class ReviewsService {
     return this.http.delete<void>(`${this.apiUrl}/${reviewId}/comments/${commentId}`);
   }
 
-  // Falta implementar en backend
-  getAvailableFilters(): { tags: string[]; games: string[] } {
-    const current = this.filters$.value;
-    return {
-      tags: [...current.tags],
-      games: [...current.games]
-    };
-  }
-
   private mapPagedReviews(dto: PagedResult<ReviewDto>): PagedResult<ReviewWithUserVote> {
+    const data = (dto.data ?? []).map((item) =>
+      this.mapReview(item, this.normalizeVote((item.userVote ?? 0) as VoteValue))
+    );
+
     return {
-      data: dto.data.map(item => this.mapReview(item, 0)),
-      total: dto.total ?? 0,
+      data,
+      total: dto.total ?? data.length,
       page: dto.page,
       pageSize: dto.pageSize
     };
@@ -254,29 +246,5 @@ export class ReviewsService {
     }
 
     return 0;
-  }
-
-  // Falta implementar en backend
-  private updateFilters(reviews: Review[]): void {
-    const current = this.filters$.value;
-    const tags = new Set(current.tags);
-    const games = new Set(current.games);
-
-    reviews.forEach((review) => {
-      if (review.game?.genre) {
-        tags.add(review.game.genre);
-      }
-
-      if (review.game?.name) {
-        games.add(review.game.name);
-      }
-    });
-
-    const next = {
-      tags: Array.from(tags).sort((a, b) => a.localeCompare(b, 'es')),
-      games: Array.from(games).sort((a, b) => a.localeCompare(b, 'es'))
-    };
-
-    this.filters$.next(next);
   }
 }

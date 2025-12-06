@@ -44,7 +44,6 @@ export class CommentFormComponent {
   @Input() reviewId = '';
   @Output() created = new EventEmitter<Comment>();
 
-  // Control para el contenido
   protected readonly control = new FormControl('', {
     nonNullable: true,
     validators: [Validators.required, Validators.minLength(2), Validators.maxLength(2000)]

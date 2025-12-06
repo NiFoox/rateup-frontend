@@ -69,8 +69,13 @@ export class ReviewCard {
     }
     if (this.review.game?.name) {
       return this.review.game.genre
+        ? `${this.review.game.genre}`
+        : this.review.game.name; 
+      /*
+      return this.review.game.genre
         ? `${this.review.game.name} • ${this.review.game.genre}`
-        : this.review.game.name;
+        : this.review.game.name; 
+      */
     }
     return `Juego ${this.review.gameId}`;
   }
