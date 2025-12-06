@@ -369,7 +369,6 @@ export class UsersComponent implements OnInit {
       // Conflictos de negocio (username/email en uso, etc.)
       if (status === 409) {
         if (apiError.message) {
-          
           return apiError.message;
         }
         return 'Los datos ingresados ya están en uso.';
