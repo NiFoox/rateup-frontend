@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .app-toolbar {
   position: sticky;
   top: 0;
@@ -47,12 +48,20 @@
   display: inline-block;
   vertical-align: middle;
   position: relative;;
+=======
+.app-title {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 18px;
+>>>>>>> develop
 }
 
 .spacer {
   flex: 1 1 auto;
 }
 
+<<<<<<< HEAD
 .active {
   border-bottom: 2px solid #60a5fa;
   border-radius: 0px;
@@ -93,4 +102,9 @@
 
 .app-toolbar mat-icon {
   color: inherit;
+=======
+mat-toolbar button {
+  color: white;
+  font-weight: 500;
+>>>>>>> develop
 }

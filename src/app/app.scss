@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .app-content {
 :host {
   display: block;
@@ -18,4 +19,85 @@
   flex-direction: column;
   background-color: var(--mat-sys-surface-container-low);
 }
+=======
+mat-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  padding: 0 24px;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.main-content {
+  padding: 24px;
+  padding-top: 80px;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 24px;
+  min-height: calc(100vh - 160px);
+}
+
+.app-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-right: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-button {
+  margin: 0 8px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.toolbar-button mat-icon {
+  margin-right: 8px;
+}
+
+.active-link {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  border-radius: 4px;
+}
+
+@media (max-width: 600px) {
+  .app-title {
+    font-size: 1.2rem;
+    margin-right: 12px;
+  }
+
+  .toolbar-button span {
+    display: none;
+  }
+
+  .toolbar-button mat-icon {
+    margin-right: 0;
+  }
+
+  .main-content {
+    padding: 16px;
+    padding-top: 64px;
+  }
+
+  .container {
+    padding: 16px;
+  }
+>>>>>>> develop
 }
