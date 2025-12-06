@@ -127,7 +127,7 @@ export class ReviewsPage implements OnDestroy {
       this.loadingMore.set(false);
       this.items.set([]);
 
-      // this.loadPage(1, false);
+      this.loadPage(1, false);
     });
   }
 
